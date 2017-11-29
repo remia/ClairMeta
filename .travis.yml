@@ -1,11 +1,20 @@
-# Make sure we run container based worker
-sudo: false
+
+sudo: required
+services:
+  - docker
 dist: trusty
 
 language: python
 python:
 - '2.7'
 - '3.6'
+
+env:
+  global:
+    - BINTRAY_USER=remia
+    - BINTRAY_ORG=remiac
+    - BINTRAY_REPO=Clairmeta_remiac_test
+    - secure: "wE2TXo153zVlj0aeVIeA2FdGRHJuw3tgV2iDmnoESOcCp757V/4JkCJ/hnlWiPFScWsI+n3OjRXD03EKN2Hh7eiRJn9rtGYwtGia0A9hkwjUWfzkWwd+lE3qiAbe/Pag3HQZTz8HbILBzoVoLuBKr91WAAbAK9oV59exzuY3BmEdUPr/2WDz9hgSomsJ5fZ1Ak2MsNKyf9QnYQtR1p8v+zFaGTZNarPGSGqdcNdC60jU68WGj+fV/6DWNkYudzMWdM+EsVdYV04Ohz1j8BDPUM9jLUnQgxzI/KAfJab180cqcv6MT9exZR5NkqEeCU8/7rxscdsbrMfFsm/z86ZuJvgC3c/NDAFg/BDU9uo7uaFdeftqgkgiGwUxGIUGMD7Cj/lHWeyjKc8E6U5K/Q40uRdb87nQOPOWwSRzwqaXlWBq2KYZoliA6FM7S3gl2yFWD/fgVnuRI+lLwZVQdlmJ7Nyk+9IgQ4sLzSjULHk6QFzGAX6vH4MowdASbkziW8YlMyL0pBKU1mQwAEaZmxGNicNno/B2YpMg63uCa9KoRh4EfiIveTmz/BuHnThxQ9Pny/QrrXDO/P2Isifak/XcxMPQ7QvtT5fvVEnYvU9uAcbhodyYS72Pu6t7REgqPXE6JBsgfUR6r+duEJ3GTAJLwlOikru++iHWwGIEczdLGLQ="
 
 install:
 - pip install pipenv
@@ -23,10 +32,15 @@ stages:
     if: type IN (pull_request) OR tag =~ ^1
   - name: deploy
     if: tag =~ ^1
+  - name: packaging
+    if: tag =~ ^pkg
 
 # Jobs
 jobs:
   include:
+  - stage: packaging
+    script:
+    - /bin/bash .travis/build_env.sh
   - stage: deploy
     script:
     - echo "Deploying..."
