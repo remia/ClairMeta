@@ -1,9 +1,12 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
+from __future__ import annotations
+
 import re
 from collections import defaultdict
 from datetime import datetime
+from typing import ClassVar
 
 from clairmeta.utils.file import human_size
 
@@ -11,7 +14,7 @@ from clairmeta.utils.file import human_size
 class CheckReport:
     """Check report listing all checks executions."""
 
-    ORDERED_STATUS = [
+    ORDERED_STATUS: ClassVar[list[str]] = [
         "ERROR",
         "WARNING",
         "INFO",
@@ -19,7 +22,7 @@ class CheckReport:
         "BYPASS",
     ]
 
-    PRETTY_STATUS = {
+    PRETTY_STATUS: ClassVar[dict[str, str]] = {
         "ERROR": "Error(s)",
         "WARNING": "Warning(s)",
         "INFO": "Info(s)",
@@ -38,14 +41,14 @@ class CheckReport:
         self.dcp = dcp
         self.checks = dcp.checks
         self.profile = profile
-        self.date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        self.date = datetime.now().astimezone().strftime("%d/%m/%Y %H:%M:%S")
         self.duration = sum([c.seconds_elapsed for c in self.checks])
 
         self._detect_check_criticality()
 
     def checks_count(self):
         """Return the number of different checks executed."""
-        check_unique = set([c.name for c in self.checks if not c.bypass])
+        check_unique = {c.name for c in self.checks if not c.bypass}
         return len(check_unique)
 
     def checks_failed(self):
@@ -80,7 +83,7 @@ class CheckReport:
 
     def is_valid(self):
         """Returns validity of checked DCP."""
-        return all([c.is_valid() for c in self.checks])
+        return all(c.is_valid() for c in self.checks)
 
     def pretty_str(self):
         """Format the report in a human friendly way."""
@@ -125,9 +128,7 @@ class CheckReport:
                     self.PRETTY_STATUS[status] + ":", "\n".join(out_stack)
                 )
 
-        bypassed = "\n".join(
-            set(["  . " + c.short_desc() for c in self.checks_bypassed()])
-        )
+        bypassed = "\n".join({"  . " + c.short_desc() for c in self.checks_bypassed()})
         if bypassed:
             report += "{}\n{}\n".format(self.PRETTY_STATUS["BYPASS"] + ":", bypassed)
 

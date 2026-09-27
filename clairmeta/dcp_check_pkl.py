@@ -86,7 +86,7 @@ class Checker(CheckerBase):
         """
         uuid, _, _ = asset
         # Note : dcp._list_asset is directly extracted from Assetmap
-        if uuid not in self.dcp._list_asset.keys():
+        if uuid not in self.dcp._list_asset:
             self.error("Not present in Assetmap")
 
     def check_assets_pkl_size(self, pkl, asset):
@@ -103,9 +103,7 @@ class Checker(CheckerBase):
         actual_size = os.path.getsize(path)
 
         if actual_size != asset_size:
-            self.error(
-                f"Invalid size, expected {asset_size} but got {actual_size}"
-            )
+            self.error(f"Invalid size, expected {asset_size} but got {actual_size}")
 
     def check_assets_pkl_hash(self, pkl, asset):
         """PKL assets hash check.

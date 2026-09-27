@@ -6,10 +6,8 @@ class ClairMetaException(Exception):
     """Base class for all exception raised by this library."""
 
 
-
 class CommandException(ClairMetaException):
     """Raised when external command fails."""
-
 
 
 class ProbeException(ClairMetaException):
@@ -26,4 +24,3 @@ class CheckException(ClairMetaException):
     ``error()`` and ``fatal_error()`` methods.
 
     """
-

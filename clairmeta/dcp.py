@@ -158,7 +158,7 @@ class DCP:
             return
 
         for kdm in self._list_kdm:
-            for _, key in kdm["Info"]["KDM"]["Keys"].items():
+            for key in kdm["Info"]["KDM"]["Keys"].values():
                 plain = decrypt_b64(key["Cipher"], self.pkey)
                 key.update(kdm_extract_key_info(plain))
 

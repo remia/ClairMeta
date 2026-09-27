@@ -188,7 +188,7 @@ def probe_mxf_clean(in_meta):
 
 
 @contextlib.contextmanager
-def unwrap_mxf(path, prefix=None, args=[]):
+def unwrap_mxf(path, prefix=None, args=()):
     """Temporarily unwrap MXF asset in a temporary folder using asdcp-unwrap.
 
     Args:
@@ -216,8 +216,7 @@ def unwrap_mxf(path, prefix=None, args=[]):
             folder = os.path.splitext(os.path.basename(path))[0]
             unwrap_prefix = os.path.join(tmp, folder)
 
-        unwrap_args = [ASDCP_UNWRAP_CMD, path, unwrap_prefix]
-        unwrap_args += args
+        unwrap_args = [ASDCP_UNWRAP_CMD, path, unwrap_prefix, *args]
 
         execute_command(unwrap_args)
         yield tmp
@@ -270,7 +269,7 @@ def stat_mxf_audio(path, channels, entry_point, duration):
             ]
         )
 
-        out, err = execute_command(sox_args)
+        _out, err = execute_command(sox_args)
         err = err.decode("UTF-8")
 
     statistics = {
@@ -328,7 +327,7 @@ def probe_mediainfo(path):
 
     mediainfo_args = [MEDIAINFO_CMD, "--Output=XML", path]
 
-    out, err = execute_command(mediainfo_args)
+    out, _err = execute_command(mediainfo_args)
 
     probe = xmltodict.parse(
         out, force_list=("track",), process_namespaces=False, dict_constructor=dict
@@ -356,8 +355,8 @@ def probe_mediainfo(path):
                 metadata = track
             else:
                 metadata["Probe" + track_type] = track
-    except Exception:
-        raise CommandException("Cannot read file metadata")
+    except Exception as e:
+        raise CommandException("Cannot read file metadata") from e
 
     return {"Path": path, "Type": "MEDIA", "Probe": metadata}
 

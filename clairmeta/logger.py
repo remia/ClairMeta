@@ -56,7 +56,7 @@ def init_file(log, formatter):
         )
         file_handler.setFormatter(formatter)
         log.addHandler(file_handler)
-    except Exception as e:
+    except OSError as e:
         log.error(f"Could not intialize log file : {e!s}")
 
 

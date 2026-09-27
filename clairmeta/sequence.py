@@ -46,7 +46,7 @@ class Sequence:
         )
 
         for folder, seqs in self.probe_folder.items():
-            for seq, keys in seqs.items():
+            for keys in seqs.values():
                 ext = keys.get("Extension")
                 check_keys = setting["allowed_extensions"].get("." + ext)
                 probe_keys = keys.get("Probe")

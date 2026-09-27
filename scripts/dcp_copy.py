@@ -50,7 +50,7 @@ def cli_copy(args):
 
         return status
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - report any failure and exit
         print(str(e))
         return False
 

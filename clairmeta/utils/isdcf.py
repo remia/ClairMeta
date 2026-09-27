@@ -179,7 +179,7 @@ def parse_isdcf_string(isdcf_str):
                 f"ContentTitle Part {field} not matching any naming convention field"
             )
 
-    for name, _ in RULES[dcnc_version].items():
+    for name in RULES[dcnc_version]:
         if name not in fields_matched:
             error_list.append(f"Field {name} not found in ContentTitle")
 
@@ -200,7 +200,7 @@ def init_dict_isdcf(rules):
 
         res[name] = {}
         res[name]["Value"] = ""
-        res[name].update({k: DEFAULT for k in pattern.groupindex.keys()})
+        res[name].update({k: DEFAULT for k in pattern.groupindex})
 
     return res
 

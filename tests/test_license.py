@@ -18,7 +18,7 @@ class LicenseTest(unittest.TestCase):
         with open(path, "r") as fhandle:
             lines = fhandle.readlines()
             lines = [ln for ln in lines if ln != "" and not ln.startswith("#!")]
-            return all([a == b for a, b in zip(template_lines, lines)])
+            return all(a == b for a, b in zip(template_lines, lines))
 
     def test_sources_have_license(self):
         for dirpath, dirnames, filenames in os.walk(source_folder):

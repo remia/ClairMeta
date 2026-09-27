@@ -248,7 +248,7 @@ class Checker(CheckerBase):
                 if asset_node["Encrypted"]:
                     k = get_contentkey_for_asset(self.dcp, asset_node)
                     unwrap_args = ["-k", k]
-            except Exception as e:
+            except (LookupError, ValueError) as e:
                 get_log().info(f"Subtitle inspection skipped : {e!s}")
                 return
 
@@ -360,9 +360,7 @@ class Checker(CheckerBase):
         try:
             st_lang_obj = lookup_language(st_lang)
         except LookupError:
-            self.error(
-                f"Subtitle language from XML could not be detected : {st_lang}"
-            )
+            self.error(f"Subtitle language from XML could not be detected : {st_lang}")
 
         cpl_lang = asset.get("Language")
         if not cpl_lang:
@@ -370,9 +368,7 @@ class Checker(CheckerBase):
 
         cpl_lang_obj = lookup_language(cpl_lang)
         if not cpl_lang_obj:
-            self.error(
-                f"Subtitle language from CPL could not be detected : {cpl_lang}"
-            )
+            self.error(f"Subtitle language from CPL could not be detected : {cpl_lang}")
 
         if st_lang_obj != cpl_lang_obj:
             self.error(
@@ -435,9 +431,7 @@ class Checker(CheckerBase):
 
         for ref in font_ref:
             if ref != font_id:
-                self.error(
-                    f"Subtitle reference unknown font {ref} (loaded {font_id})"
-                )
+                self.error(f"Subtitle reference unknown font {ref} (loaded {font_id})")
 
     def check_subtitle_cpl_font(self, playlist, asset, folder):
         """Subtitle font file exists.
@@ -464,7 +458,7 @@ class Checker(CheckerBase):
         st_dict = self.st_util.get_subtitle_xml(asset, folder)
         if not st_dict:
             return
-        path, uri = self.st_util.get_font_path(st_dict, folder)
+        path, _uri = self.st_util.get_font_path(st_dict, folder)
         if not path:
             return
         if not os.path.exists(path):
@@ -501,7 +495,7 @@ class Checker(CheckerBase):
             for char in text:
                 unique_chars.add(char)
 
-        path, uri = self.st_util.get_font_path(st_dict, folder)
+        path, _uri = self.st_util.get_font_path(st_dict, folder)
         if not path:
             return
         if not os.path.exists(path):
@@ -550,9 +544,7 @@ class Checker(CheckerBase):
             if f_s and f_s > dur:
                 self.error(f"Subtitle {st_idx} FadeUpTime longer than duration")
             if f_d and f_d > dur:
-                self.error(
-                    f"Subtitle {st_idx} FadeDownTime longer than duration"
-                )
+                self.error(f"Subtitle {st_idx} FadeDownTime longer than duration")
 
     def check_subtitle_cpl_concurrent_visibility(self, playlist, asset, folder):
         """Maximum number of subtitle visible on screen at once.
@@ -670,12 +662,11 @@ class Checker(CheckerBase):
         _, asset = asset
         cpl_rate = asset["EditRate"]
 
-        if self.dcp.schema == "SMPTE":
-            if st_rate != cpl_rate:
-                self.error(
-                    f"Subtitle EditRate mismatch, Subtitle claims {st_rate} but CPL "
-                    f"{cpl_rate}"
-                )
+        if self.dcp.schema == "SMPTE" and st_rate != cpl_rate:
+            self.error(
+                f"Subtitle EditRate mismatch, Subtitle claims {st_rate} but CPL "
+                f"{cpl_rate}"
+            )
 
     def check_subtitle_cpl_entry_point(self, playlist, asset, folder):
         """Subtitle EntryPoint must be 0.

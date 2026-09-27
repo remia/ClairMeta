@@ -46,13 +46,13 @@ class CliTest(unittest.TestCase):
         return args.func(args)
 
     def test_dcp_probe_formating_dict(self):
-        status, msg = self.launch_command(
+        _status, msg = self.launch_command(
             ["probe", self.get_dcp_path(1), "-type", "dcp", "-format", "dict"]
         )
         self.assertTrue(isinstance(eval(msg), collections.abc.Mapping))
 
     def test_dcp_probe_formating_xml(self):
-        status, msg = self.launch_command(
+        _status, msg = self.launch_command(
             ["probe", self.get_dcp_path(1), "-type", "dcp", "-format", "xml"]
         )
         ET.XML(msg)
@@ -62,7 +62,7 @@ class CliTest(unittest.TestCase):
         if platform.system() == "Windows":
             return
 
-        status, msg = self.launch_command(
+        _status, msg = self.launch_command(
             ["probe", self.get_dcp_path(1), "-type", "dcp", "-format", "json"]
         )
 
@@ -77,31 +77,31 @@ class CliTest(unittest.TestCase):
         )
 
     def test_dcp_check_formating_dict(self):
-        status, msg = self.launch_command(
+        _status, msg = self.launch_command(
             ["check", self.get_dcp_path(1), "-type", "dcp", "-format", "dict"]
         )
         self.assertTrue(isinstance(eval(msg), collections.abc.Mapping))
 
     def test_dcp_check_formating_xml(self):
-        status, msg = self.launch_command(
+        _status, msg = self.launch_command(
             ["check", self.get_dcp_path(1), "-type", "dcp", "-format", "xml"]
         )
         ET.XML(msg)
 
     def test_dcp_check_formating_json(self):
-        status, msg = self.launch_command(
+        _status, msg = self.launch_command(
             ["check", self.get_dcp_path(1), "-type", "dcp", "-format", "json"]
         )
         json.loads(msg, object_pairs_hook=OrderedDict)
 
     def test_dcp_check_good(self):
-        status, msg = self.launch_command(
+        status, _msg = self.launch_command(
             ["check", self.get_dcp_path(1), "-type", "dcp", "-log", "CRITICAL"]
         )
         self.assertTrue(status)
 
     def test_dcp_check_good_progress(self):
-        status, msg = self.launch_command(
+        status, _msg = self.launch_command(
             [
                 "check",
                 self.get_dcp_path(1),
@@ -115,7 +115,7 @@ class CliTest(unittest.TestCase):
         self.assertTrue(status)
 
     def test_dcp_check_good_relink(self):
-        status, msg = self.launch_command(
+        status, _msg = self.launch_command(
             [
                 "check",
                 self.get_dcp_path(2),
@@ -130,7 +130,7 @@ class CliTest(unittest.TestCase):
         self.assertTrue(status)
 
     def test_dcp_check_wrong_relink(self):
-        status, msg = self.launch_command(
+        status, _msg = self.launch_command(
             [
                 "check",
                 self.get_dcp_path(1),
@@ -145,25 +145,25 @@ class CliTest(unittest.TestCase):
         self.assertFalse(status)
 
     def test_dcp_check_bad(self):
-        status, msg = self.launch_command(
+        status, _msg = self.launch_command(
             ["check", self.get_dcp_path(25), "-type", "dcp", "-log", "CRITICAL"]
         )
         self.assertFalse(status)
 
     def test_dsm_probe(self):
-        status, msg = self.launch_command(
+        status, _msg = self.launch_command(
             ["probe", "-type", "dsm", self.get_dsm_path("DSM_PKG/MINI_DSM1")]
         )
         self.assertTrue(status)
 
     def test_dsm_check_good(self):
-        status, msg = self.launch_command(
+        status, _msg = self.launch_command(
             ["check", "-type", "dsm", self.get_dsm_path("DSM_PKG/MINI_DSM1")]
         )
         self.assertTrue(status)
 
     def test_dsm_check_bad(self):
-        status, msg = self.launch_command(
+        status, _msg = self.launch_command(
             ["check", "-type", "dsm", self.get_dsm_path("DSM_BAD_FILE_NAME_LENGTH")]
         )
         self.assertFalse(status)

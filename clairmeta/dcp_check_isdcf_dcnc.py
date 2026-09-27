@@ -1,7 +1,7 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from clairmeta.dcp_check import CheckerBase
 from clairmeta.dcp_utils import list_cpl_assets
@@ -65,14 +65,16 @@ class Checker(CheckerBase):
         date_str = fields["Date"].get("Value")
         if date_str:
             try:
-                date = datetime.strptime(date_str, "%Y%m%d")
+                date = datetime.strptime(date_str, "%Y%m%d").replace(
+                    tzinfo=timezone.utc
+                )
             except ValueError:
                 self.fatal_error(
                     f"Date can't be parsed, expecting YYYYMMDD : {date_str}",
                     "format",
                 )
 
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             if date > now:
                 self.error("Date suggest a composition from the future", "future")
 
@@ -217,12 +219,11 @@ class Checker(CheckerBase):
         mxf_res = playlist["Info"]["CompositionPlaylist"]["Resolution"]
         detect_res = mxf_res != "Unknown" and mxf_res != "Mixed"
 
-        if resolution and detect_res:
-            if mxf_res not in resolution_map[resolution]:
-                self.error(
-                    f"ContentTitle claims {resolution} but CPL Picture track resolution "
-                    f"is {mxf_res}"
-                )
+        if resolution and detect_res and mxf_res not in resolution_map[resolution]:
+            self.error(
+                f"ContentTitle claims {resolution} but CPL Picture track resolution "
+                f"is {mxf_res}"
+            )
 
     def check_dcnc_field_claim_standard(self, playlist, fields):
         """DCP Standard coherence check."""

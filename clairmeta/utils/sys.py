@@ -194,7 +194,7 @@ def keys_by_pattern_dict(in_dict, patterns, matchs=None):
 
     if isinstance(in_dict, dict):
         for k, v in in_dict.items():
-            if any([re.search(p, k) for p in patterns]):
+            if any(re.search(p, k) for p in patterns):
                 matchs.append(v)
             keys_by_pattern_dict(v, patterns, matchs)
     if isinstance(in_dict, list):
@@ -224,7 +224,7 @@ def remove_key_dict(in_dict, patterns):
         in_dict = {
             key: remove_key_dict(value, patterns)
             for key, value in in_dict.items()
-            if not any([re.search(p, key) for p in patterns])
+            if not any(re.search(p, key) for p in patterns)
         }
     elif isinstance(in_dict, list):
         in_dict = [remove_key_dict(item, patterns) for item in in_dict]

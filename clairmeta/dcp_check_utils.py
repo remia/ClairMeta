@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 
 from dateutil import parser
+from lxml import etree
 
 from clairmeta.logger import get_log
 from clairmeta.settings import DCP_SETTINGS
@@ -81,7 +82,9 @@ def check_xml(checker, xml_path, xml_ns, schema_type, schema_dcp):
 
     # Coherence with package schema
     if schema_type != schema_dcp:
-        message = f"Schema is not valid got {schema_type} but was expecting {schema_dcp}"
+        message = (
+            f"Schema is not valid got {schema_type} but was expecting {schema_dcp}"
+        )
         checker.error(message, "schema_coherence")
 
     # XSD schema validation
@@ -89,7 +92,7 @@ def check_xml(checker, xml_path, xml_ns, schema_type, schema_dcp):
         validate_xml(xml_path, schema_id)
     except LookupError:
         get_log().info(f"Schema validation skipped : {xml_path}")
-    except Exception as e:
+    except (OSError, ValueError, etree.LxmlError) as e:
         message = f"Schema validation error : {e!s}\n" f"Using schema : {schema_id}"
         checker.error(message, "schema_validation")
 
@@ -111,6 +114,4 @@ def compare_uuid(checker, uuid_to_check, uuid_reference):
     if not check_uuid(uuid):
         checker.error(f"Invalid {name} uuid found : {uuid}")
     if uuid.lower() != uuid_ref.lower():
-        checker.error(
-            f"Uuid {name} ({uuid}) not equal to {name_ref} ({uuid_ref})"
-        )
+        checker.error(f"Uuid {name} ({uuid}) not equal to {name_ref} ({uuid_ref})")

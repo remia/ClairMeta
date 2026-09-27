@@ -20,7 +20,7 @@ def check_sequence(path, allowed_extensions, ignore_files=None, ignore_dirs=None
     Raises:
         ValueError: If ``path`` is not a valid directory.
         ValueError: If ``path`` is an empty directory.
-        ValueError: If ``allowed_extensions`` is not a dictionary.
+        TypeError: If ``allowed_extensions`` is not a dictionary.
 
     """
     if not os.path.isdir(path):
@@ -28,7 +28,7 @@ def check_sequence(path, allowed_extensions, ignore_files=None, ignore_dirs=None
     if not os.listdir(path):
         raise ValueError("Empty folder")
     if not isinstance(allowed_extensions, dict):
-        raise ValueError("Wrong arguments, allowed_extensions must be a dict")
+        raise TypeError("Wrong arguments, allowed_extensions must be a dict")
 
     for dirpath, dirnames, filenames in os.walk(path, topdown=True):
         # Filter out explicitly ignored files

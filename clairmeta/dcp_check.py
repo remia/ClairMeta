@@ -78,7 +78,9 @@ class CheckerBase:
                 checker.bypass_list = self.bypass_list
                 checker.hash_callback = self.hash_callback
                 self.check_modules[v] = checker
-            except (ImportError, Exception) as e:
+            except (
+                Exception
+            ) as e:  # noqa: BLE001 - a broken module must not abort the check
                 self.log.critical(f"Import error {module_path} : {e!s}")
 
     def check(self):
@@ -107,7 +109,7 @@ class CheckerBase:
         member_list = inspect.getmembers(self, predicate=inspect.ismethod)
         for k, v in member_list:
             check_prefix = k.startswith("check_" + prefix)
-            check_bypass = any([k.startswith(c) for c in self.bypass_list])
+            check_bypass = any(k.startswith(c) for c in self.bypass_list)
 
             if check_prefix and not check_bypass:
                 checks.append(v)
@@ -122,7 +124,7 @@ class CheckerBase:
         """Execute all checks."""
         self.log.info(f"Checking DCP : {self.dcp.path}")
 
-        for _, checker in self.check_modules.items():
+        for checker in self.check_modules.values():
             self.checks += checker.run_checks()
         return self.checks
 
@@ -149,7 +151,9 @@ class CheckerBase:
             check_res = check(*args)
         except CheckException:
             pass
-        except Exception:
+        except (
+            Exception
+        ):  # noqa: BLE001 - any check failure is reported as internal_error
             error = CheckError(f"{traceback.format_exc()}")
             error.name = "internal_error"
             error.parent_name = check_exec.name
@@ -167,7 +171,7 @@ class CheckerBase:
 
             self.checks.append(check_exec)
 
-            return check_res
+        return check_res
 
     def _check_setup(self):
         """Internal setup executed before each check is run."""
@@ -185,7 +189,7 @@ class CheckerBase:
 
         """
         if name and not re.match(self.ERROR_NAME_RE, name):
-            raise Exception(f"Error name invalid : {name}")
+            raise ValueError(f"Error name invalid : {name}")
 
         self.errors.append(CheckError(message, name.lower(), doc))
 

@@ -6,6 +6,7 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 
 from cryptography import x509
+from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
@@ -15,6 +16,9 @@ from clairmeta.dcp_check import CheckerBase
 from clairmeta.settings import DCP_SETTINGS
 from clairmeta.utils.sys import all_keys_in_dict
 from clairmeta.utils.xml import canonicalize_xml
+
+# Exceptions raised by cryptography when a signature can't be verified
+SIGNATURE_ERRORS = (InvalidSignature, UnsupportedAlgorithm, TypeError, ValueError)
 
 
 class Checker(CheckerBase):
@@ -76,7 +80,7 @@ class Checker(CheckerBase):
         try:
             certif_bytes = base64.b64decode(cert["X509Certificate"])
             certif = x509.load_der_x509_certificate(certif_bytes)
-        except Exception as e:
+        except (KeyError, ValueError) as e:
             self.fatal_error(
                 f"Invalid certificate encoding : {e!s}\nDigital Signature checks will be skipped for this asset.",
                 "decoding",
@@ -187,9 +191,7 @@ class Checker(CheckerBase):
         for ext in cert.extensions:
             is_known = ext.oid in required_extensions
             if not is_known and ext.critical:
-                self.error(
-                    "Unknown extension marked as critical : " f"{ext._name}"
-                )
+                self.error("Unknown extension marked as critical : " f"{ext._name}")
 
     def check_certif_fields(self, cert, index):
         """Certificate mandatory fields check.
@@ -339,13 +341,9 @@ class Checker(CheckerBase):
             if not roles:
                 self.error(f"Missing role in CommonName ({cn})")
             if self.context_role not in roles:
-                self.error(
-                    f"Expecting {self.context_role} role in CommonName ({cn})"
-                )
+                self.error(f"Expecting {self.context_role} role in CommonName ({cn})")
         if is_ca and roles:
-            self.error(
-                f"Role(s) found in authority certificate CommonName ({cn})"
-            )
+            self.error(f"Role(s) found in authority certificate CommonName ({cn})")
 
     def check_certif_multi_role(self, cert, index):
         """Leaf certificate role check.
@@ -362,9 +360,8 @@ class Checker(CheckerBase):
         is_ca = index > 0
         is_leaf = not is_ca
 
-        if is_leaf and self.dcp.schema == "SMPTE":
-            if roles and len(roles) > 1:
-                self.error(f"Superfluous roles found in CommonName ({cn})")
+        if is_leaf and self.dcp.schema == "SMPTE" and roles and len(roles) > 1:
+            self.error(f"Superfluous roles found in CommonName ({cn})")
 
     def check_certif_date(self, cert, index):
         """Certificate date validation.
@@ -382,8 +379,9 @@ class Checker(CheckerBase):
         if self.context_time == "NOW":
             validity_time = datetime.now(timezone.utc)
         elif self.context_time != "":
-            validity_time = datetime.strptime(self.context_time, self.time_format)
-            validity_time = validity_time.replace(tzinfo=timezone.utc)
+            validity_time = datetime.strptime(
+                self.context_time, self.time_format
+            ).replace(tzinfo=timezone.utc)
 
         if self.context_time:
             not_before = cert.not_valid_before_utc
@@ -433,9 +431,7 @@ class Checker(CheckerBase):
                 f" int32 overflow ({not_after})"
             )
         elif not_after >= ten_years_past:
-            self.error(
-                f"Certificate validity extends past 10 years ({not_after})"
-            )
+            self.error(f"Certificate validity extends past 10 years ({not_after})")
 
     def check_certif_signature_algorithm(self, cert, index):
         """Certificate signature algorithm check.
@@ -553,7 +549,7 @@ class Checker(CheckerBase):
                 )
             else:
                 cert.verify_directly_issued_by(issuer_cert)
-        except Exception as e:
+        except SIGNATURE_ERRORS as e:
             self.error(f"Certificate signature check failure : {e!s}")
 
     def check_xml_certif_serial_coherence(self, cert, xml_cert):
@@ -639,7 +635,7 @@ class Checker(CheckerBase):
 
         References: N/A
         """
-        sign_alg_set = set([c.signature_hash_algorithm.name for c in self.cert_list])
+        sign_alg_set = {c.signature_hash_algorithm.name for c in self.cert_list}
         if len(sign_alg_set) > 1:
             self.error(
                 "Certificate chain contains certificates "
@@ -763,5 +759,5 @@ class Checker(CheckerBase):
                 padding=PKCS1v15(),
                 algorithm=self.sig_algorithm_map[self.dcp.schema],
             )
-        except Exception:
+        except SIGNATURE_ERRORS:
             self.error("Signature validation failed")

@@ -42,7 +42,7 @@ def generic_parse(path, root_name, force_list=(), namespaces=DCP_SETTINGS["xmlns
                 "FilePath": path,
                 "Info": {root_name: node},
             }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - malformed XML must not abort parsing
         get_log().error(f"Error parsing XML {path} : {e!s}")
 
 
@@ -110,7 +110,7 @@ def cpl_parse(path):
 
 def cpl_dcnc_parse(cpl_node):
     """Extract information from ContentTitle"""
-    fields, errors = parse_isdcf_string(cpl_node.get("ContentTitleText"))
+    fields, _errors = parse_isdcf_string(cpl_node.get("ContentTitleText"))
     cpl_node["NamingConvention"] = fields
 
 

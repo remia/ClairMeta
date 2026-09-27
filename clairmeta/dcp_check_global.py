@@ -63,7 +63,7 @@ class Checker(CheckerBase):
             os.path.relpath(a, self.dcp.path)
             for a in self.dcp._list_files
             if a not in list_asset_path
-            and not any([re.search(i, a) for i in self.allowed_foreign_files])
+            and not any(re.search(i, a) for i in self.allowed_foreign_files)
         ]
         if self.dcp.foreign_files:
             self.error("\n".join(self.dcp.foreign_files))
@@ -118,7 +118,7 @@ class Checker(CheckerBase):
 
             for name, xml in xmls:
                 for field in ["Signer", "Signature"]:
-                    if field not in xml.keys():
+                    if field not in xml:
                         self.error(f"Missing {field} element in {name}")
 
     def check_link_ov_coherence(self):

@@ -93,16 +93,14 @@ def load_profile(file_path):
     try:
         with open(file_path) as f:
             profile = json.load(f)
-    except Exception as e:
+    except (OSError, ValueError) as e:
         raise ClairMetaException(
             f"Load Profile {file_path} : loading error - {e!s}"
-        )
+        ) from e
 
     for k, v in profile_format.items():
         if k not in profile:
-            raise ClairMetaException(
-                f"Load Profile {file_path} : missing key {k}"
-            )
+            raise ClairMetaException(f"Load Profile {file_path} : missing key {k}")
         if not isinstance(profile[k], v):
             raise ClairMetaException(
                 f"Load Profile {file_path} : key {k} should be a {v}"

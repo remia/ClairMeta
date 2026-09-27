@@ -7,10 +7,7 @@ from clairmeta.logger import get_log
 from clairmeta.sequence import Sequence
 from clairmeta.utils.probe import PROBE_DEPS, check_command
 
-__all__ = ["DCP", "Sequence"]
-__license__ = __license__
-__author__ = __author__
-__version__ = __version__
+__all__ = ["DCP", "Sequence", "__author__", "__license__", "__version__"]
 
 
 # External dependencies check

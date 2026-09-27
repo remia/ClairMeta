@@ -94,8 +94,7 @@ class Checker(CheckerBase):
         at = cpl_node.get("AnnotationText")
         if at and at != ct:
             self.error(
-                "CPL ContentTitleText / AnnotationText "
-                f"mismatch : {ct} / {at}"
+                "CPL ContentTitleText / AnnotationText " f"mismatch : {ct} / {at}"
             )
 
     def check_cpl_contenttitle_pklannotationtext_match(self, playlist):
@@ -126,8 +125,7 @@ class Checker(CheckerBase):
             )
         elif at and at != ct:
             self.error(
-                "CPL ContentTitleText / PKL "
-                f"AnnotationText mismatch : {ct} / {at}",
+                "CPL ContentTitleText / PKL " f"AnnotationText mismatch : {ct} / {at}",
                 "mismatch",
             )
 
@@ -210,9 +208,7 @@ cause issue for some equipements in the field.
         cpl = playlist["Info"]["CompositionPlaylist"]
         for k in coherence_keys:
             if cpl[k] == "Mixed":
-                self.error(
-                    f"{k} is not coherent for all reels", k, doc_keys.get(k, "")
-                )
+                self.error(f"{k} is not coherent for all reels", k, doc_keys.get(k, ""))
 
     def check_cpl_reel_duration(self, playlist):
         """CPL reels shall last at least one second.
@@ -280,10 +276,7 @@ cause issue for some equipements in the field.
 
         for reel in playlist["Info"]["CompositionPlaylist"]["ReelList"]:
             assets = [
-                v
-                for k, v in reel["Assets"].items()
-                for key in cut_keys
-                if key in v.keys()
+                v for k, v in reel["Assets"].items() for key in cut_keys if key in v
             ]
 
             for asset in assets:
@@ -299,9 +292,7 @@ cause issue for some equipements in the field.
                     )
 
                 if end - start != dur:
-                    self.error(
-                        f"Invalid Duration in Reel {pos_reel}", "duration"
-                    )
+                    self.error(f"Invalid Duration in Reel {pos_reel}", "duration")
 
             cpl_position += assets[0]["Duration"]
 
@@ -356,9 +347,7 @@ cause issue for some equipements in the field.
 
         if not is_found:
             asset_type = get_type_for_asset(playlist, uuid)
-            self.error(
-                f"Asset missing ({asset_type}), multi CPL must be complete"
-            )
+            self.error(f"Asset missing ({asset_type}), multi CPL must be complete")
 
     def check_assets_cpl_labels(self, playlist, asset):
         """CPL assets labels check.

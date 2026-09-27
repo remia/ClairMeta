@@ -76,7 +76,7 @@ def cli_check(args):
             setting = package_check_settings[args.type]
             status = obj_type(args.path).check(setting)
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - report any failure as a failed check
         status = False
         print(f"Error : {e}")
 
@@ -109,7 +109,7 @@ def cli_probe(args):
             msg = prettyprint_xml(xml_str)
 
         return True, msg
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - report any failure as a failed probe
         return False, f"Error : {e}"
 
 

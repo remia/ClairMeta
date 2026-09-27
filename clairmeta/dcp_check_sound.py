@@ -110,9 +110,7 @@ class Checker(CheckerBase):
         sr = asset["Probe"]["AudioSamplingRate"]
 
         if sr not in rates:
-            self.error(
-                f"Invalid Sound SamplingRate, expected {rates} but got {sr}"
-            )
+            self.error(f"Invalid Sound SamplingRate, expected {rates} but got {sr}")
 
     def check_sound_cpl_quantization(self, playlist, asset):
         """Sound quantization check.

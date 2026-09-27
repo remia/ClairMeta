@@ -53,8 +53,8 @@ def list_pkl_assets(packinglist):
 
 def list_cpl_assets(
     cpl,
-    filters=["Picture", "Sound", "AuxData", "Subtitle", "OpenCaption", "ClosedCaption"],
-    required_keys=[],
+    filters=("Picture", "Sound", "AuxData", "Subtitle", "OpenCaption", "ClosedCaption"),
+    required_keys=(),
 ):
     """Iterator on CompositionPlayList assets.
 
@@ -76,8 +76,7 @@ def list_cpl_assets(
                 k: v for k, v in assets.items() for req_k in required_keys if req_k in v
             }
 
-        for k, v in assets.items():
-            yield k, v
+        yield from assets.items()
 
 
 #
@@ -237,8 +236,8 @@ def cpl_extract_characteristics(cpl):
                 if node_value is not None:
                     iset[ikey].append(node_value)
         # Presence set building
-        for pkey in presence_keys:
-            presence_keys[pkey].append(pkey in reel["Assets"])
+        for pkey, presence in presence_keys.items():
+            presence.append(pkey in reel["Assets"])
 
     unified_integrity_keys = {}
     for k, v in integrity_keys.items():
@@ -291,7 +290,7 @@ def cpl_probe_asset(asset, essence, path):
                 asset["EntryPoint"],
                 asset["Duration"],
             )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - any probe failure is recorded on the asset
         asset["ProbeError"] = str(e)
 
 

@@ -156,7 +156,9 @@ class DCPCheckReportTest(CheckerTestBase):
 
     def test_report_metadata(self):
         self.assertTrue(isinstance(self.report.profile, dict))
-        self.assertTrue(datetime.strptime(self.report.date, "%d/%m/%Y %H:%M:%S"))
+        self.assertTrue(
+            datetime.strptime(self.report.date, "%d/%m/%Y %H:%M:%S").astimezone()
+        )
         self.assertGreaterEqual(self.report.duration, 0)
 
     def test_report_checks(self):

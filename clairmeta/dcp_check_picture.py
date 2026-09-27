@@ -78,13 +78,13 @@ class Checker(CheckerBase):
         if "Probe" in asset:
             resolution = asset["Probe"]["Resolution"]
 
-            if not any([resolution in res for res in dci_resolutions]):
+            if not any(resolution in res for res in dci_resolutions):
                 self.error(
                     f"Picture has non DCI compliant pixel array size {resolution}",
                     "dci",
                 )
 
-            if not any([resolution in res for res in rdd52_array_sizes]):
+            if not any(resolution in res for res in rdd52_array_sizes):
                 self.error(
                     f"Picture has non RDD52 compliant pixel array size {resolution}",
                     "rdd52",
@@ -187,15 +187,16 @@ class Checker(CheckerBase):
             editrate_map = self.settings["editrates"]
 
             if resolution in self.settings["resolutions"]["2K"]:
-                if editrate not in editrate_map["2K"][dimension]:
-                    self.error(
-                        f"Invalid EditRate {editrate} for 2K {dimension} content"
-                    )
+                res_class = "2K"
             elif resolution in self.settings["resolutions"]["4K"]:
-                if editrate not in editrate_map["4K"][dimension]:
-                    self.error(
-                        f"Invalid EditRate {editrate} for 4K {dimension} content"
-                    )
+                res_class = "4K"
+            else:
+                return
+
+            if editrate not in editrate_map[res_class][dimension]:
+                self.error(
+                    f"Invalid EditRate {editrate} for {res_class} {dimension} content"
+                )
 
     def check_picture_cpl_archival_framerate(self, playlist, asset):
         """Picture archival framerate.

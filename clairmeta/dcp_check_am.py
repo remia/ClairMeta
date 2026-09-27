@@ -217,6 +217,5 @@ class Checker(CheckerBase):
 
             if length != actual_size:
                 self.error(
-                    f"Invalid size value, expected {length} but got "
-                    f"{actual_size}"
+                    f"Invalid size value, expected {length} but got " f"{actual_size}"
                 )

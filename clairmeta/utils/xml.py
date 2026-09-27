@@ -5,7 +5,6 @@ import io
 import os
 import re
 from xml.dom.minidom import parseString
-from xml.parsers.expat import ExpatError
 
 import xmltodict
 from lxml import etree
@@ -106,7 +105,7 @@ def post_parse_node(path, key, value, ns_sep=_DEFAULT_NS_SEP):
     return key, value
 
 
-def post_parse_attr(in_elem, parent_dict={}, parent_key=""):
+def post_parse_attr(in_elem, parent_dict=None, parent_key=""):
     """Convert / format attributes in Xmltodict output and returns a new dict.
 
     Recursively parse input dictionary to format attributes differently
@@ -162,7 +161,7 @@ def post_parse_attr(in_elem, parent_dict={}, parent_key=""):
     return out_elem
 
 
-def parse_xml(xml_path, namespaces={}, force_list=(), xml_attribs=True):
+def parse_xml(xml_path, namespaces=None, force_list=(), xml_attribs=True):
     """Parse a XML document and returns a dict with proper formating.
 
     Args:
@@ -192,7 +191,7 @@ def parse_xml(xml_path, namespaces={}, force_list=(), xml_attribs=True):
             readed_file = file.read()
 
             # Collapse these namespace
-            namespaces = {v: k for k, v in namespaces.items()}
+            namespaces = {v: k for k, v in (namespaces or {}).items()}
 
             xml_dict = xmltodict.parse(
                 readed_file,
@@ -210,7 +209,7 @@ def parse_xml(xml_path, namespaces={}, force_list=(), xml_attribs=True):
 
             return xml_dict
 
-    except (Exception, ExpatError) as e:
+    except Exception as e:  # noqa: BLE001 - malformed XML is logged, not raised
         get_log().error(f"Error parsing XML {xml_path} : {e!s}")
 
 
@@ -235,9 +234,7 @@ def validate_xml(xml_path, xsd_id):
     # Find schema location using catalog
     catalog = etree.parse(catalog_path).getroot()
     nsmap = {"ns": catalog.nsmap[None]}
-    match = catalog.findall(
-        f".//ns:public[@publicId='{xsd_id}']", namespaces=nsmap
-    )
+    match = catalog.findall(f".//ns:public[@publicId='{xsd_id}']", namespaces=nsmap)
 
     if not match:
         raise LookupError("XSD schema not found")

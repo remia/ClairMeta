@@ -92,7 +92,7 @@ class CheckExecution:
         """
         error_level = ErrorLevelFromString(criticality)
         return not any(
-            [ErrorLevelFromString(e.criticality) >= error_level for e in self.errors]
+            ErrorLevelFromString(e.criticality) >= error_level for e in self.errors
         )
 
     def has_errors(self, criticality=None):
@@ -110,7 +110,7 @@ class CheckExecution:
             return self.errors != []
         else:
             error_level = ErrorLevelFromString(criticality)
-            return any([e for e in self.errors if e.criticality == error_level])
+            return any(e for e in self.errors if e.criticality == error_level)
 
     def to_dict(self):
         """Returns a dictionary representation."""
