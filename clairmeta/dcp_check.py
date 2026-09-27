@@ -78,9 +78,8 @@ class CheckerBase:
                 checker.bypass_list = self.bypass_list
                 checker.hash_callback = self.hash_callback
                 self.check_modules[v] = checker
-            except (
-                Exception
-            ) as e:  # noqa: BLE001 - a broken module must not abort the check
+            # A broken module must not abort the check
+            except Exception as e:  # noqa: BLE001
                 self.log.critical(f"Import error {module_path} : {e!s}")
 
     def check(self):
@@ -151,9 +150,8 @@ class CheckerBase:
             check_res = check(*args)
         except CheckException:
             pass
-        except (
-            Exception
-        ):  # noqa: BLE001 - any check failure is reported as internal_error
+        # Any check failure is reported as internal_error
+        except Exception:  # noqa: BLE001
             error = CheckError(f"{traceback.format_exc()}")
             error.name = "internal_error"
             error.parent_name = check_exec.name
