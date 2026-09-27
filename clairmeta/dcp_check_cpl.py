@@ -1,20 +1,20 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-from __future__ import unicode_literals
 
 import operator
-from clairmeta.utils.sys import all_keys_in_dict
-from clairmeta.utils.uuid import check_uuid, extract_uuid, RFC4122_RE
-from clairmeta.utils.time import compare_ratio
+
 from clairmeta.dcp_check import CheckerBase
-from clairmeta.dcp_check_utils import check_xml, check_issuedate, compare_uuid
-from clairmeta.dcp_utils import list_cpl_assets, get_type_for_asset
+from clairmeta.dcp_check_utils import check_issuedate, check_xml, compare_uuid
+from clairmeta.dcp_utils import get_type_for_asset, list_cpl_assets
+from clairmeta.utils.sys import all_keys_in_dict
+from clairmeta.utils.time import compare_ratio
+from clairmeta.utils.uuid import RFC4122_RE, check_uuid, extract_uuid
 
 
 class Checker(CheckerBase):
     def __init__(self, dcp):
-        super(Checker, self).__init__(dcp)
+        super().__init__(dcp)
 
         self.mxf_schema_map = {
             "Interop": "MXFInterop",
@@ -58,7 +58,7 @@ class Checker(CheckerBase):
                     type_a, type_b, metadata, reel["Position"]
                 )
                 if message:
-                    what += ", {}".format(message)
+                    what += f", {message}"
 
                 self.error(what)
 
@@ -82,7 +82,7 @@ class Checker(CheckerBase):
         uuid = cpl["Id"]
 
         if not check_uuid(uuid, RFC4122_RE):
-            self.error("CPL ID invalid (RFC 4122) : {}".format(uuid))
+            self.error(f"CPL ID invalid (RFC 4122) : {uuid}")
 
     def check_cpl_contenttitle_annotationtext_match(self, playlist):
         """CPL ContentTitleText and AnnotationText shall match.
@@ -95,7 +95,7 @@ class Checker(CheckerBase):
         if at and at != ct:
             self.error(
                 "CPL ContentTitleText / AnnotationText "
-                "mismatch : {} / {}".format(ct, at)
+                f"mismatch : {ct} / {at}"
             )
 
     def check_cpl_contenttitle_pklannotationtext_match(self, playlist):
@@ -121,13 +121,13 @@ class Checker(CheckerBase):
         if is_multi_cpl and at and not ct.startswith(at):
             self.error(
                 "Multi CPLs package shall use a common denominator of all CPL "
-                "titles as the PKL AnnotationText : {} / {}".format(ct, at),
+                f"titles as the PKL AnnotationText : {ct} / {at}",
                 "common_denominator",
             )
         elif at and at != ct:
             self.error(
                 "CPL ContentTitleText / PKL "
-                "AnnotationText mismatch : {} / {}".format(ct, at),
+                f"AnnotationText mismatch : {ct} / {at}",
                 "mismatch",
             )
 
@@ -211,7 +211,7 @@ cause issue for some equipements in the field.
         for k in coherence_keys:
             if cpl[k] == "Mixed":
                 self.error(
-                    "{} is not coherent for all reels".format(k), k, doc_keys.get(k, "")
+                    f"{k} is not coherent for all reels", k, doc_keys.get(k, "")
                 )
 
     def check_cpl_reel_duration(self, playlist):
@@ -294,13 +294,13 @@ cause issue for some equipements in the field.
 
                 if start != cpl_position:
                     self.error(
-                        "Invalid CPLEntryPoint in Reel {}".format(pos_reel),
+                        f"Invalid CPLEntryPoint in Reel {pos_reel}",
                         "entrypoint",
                     )
 
                 if end - start != dur:
                     self.error(
-                        "Invalid Duration in Reel {}".format(pos_reel), "duration"
+                        f"Invalid Duration in Reel {pos_reel}", "duration"
                     )
 
             cpl_position += assets[0]["Duration"]
@@ -340,7 +340,7 @@ cause issue for some equipements in the field.
 
         if is_vf_asset and not is_relinked_from_ov:
             asset_type = get_type_for_asset(playlist, uuid)
-            self.error("Asset missing ({}), external reference".format(asset_type))
+            self.error(f"Asset missing ({asset_type}), external reference")
 
     def check_assets_cpl_missing_from_multi_cpl(self, playlist, asset):
         """Multi CPL package must be self contained.
@@ -357,7 +357,7 @@ cause issue for some equipements in the field.
         if not is_found:
             asset_type = get_type_for_asset(playlist, uuid)
             self.error(
-                "Asset missing ({}), multi CPL must be complete".format(asset_type)
+                f"Asset missing ({asset_type}), multi CPL must be complete"
             )
 
     def check_assets_cpl_labels(self, playlist, asset):
@@ -370,7 +370,7 @@ cause issue for some equipements in the field.
         if "Probe" in asset:
             label = asset["Probe"].get("LabelSetType")
             if label and label not in self.mxf_schema_map.values():
-                self.error("MXF Label invalid : {}".format(label))
+                self.error(f"MXF Label invalid : {label}")
 
     def check_assets_cpl_labels_schema(self, playlist, asset):
         """CPL assets labels / schema coherence check.
@@ -383,9 +383,7 @@ cause issue for some equipements in the field.
             label = asset["Probe"].get("LabelSetType")
             if label and self.mxf_schema_map[self.dcp.schema] != label:
                 self.error(
-                    "MXF Label incoherent, got {} but expected {}".format(
-                        label, self.mxf_schema_map[self.dcp.schema]
-                    )
+                    f"MXF Label incoherent, got {label} but expected {self.mxf_schema_map[self.dcp.schema]}"
                 )
 
     def check_assets_cpl_uuid(self, playlist, asset):
@@ -398,7 +396,7 @@ cause issue for some equipements in the field.
         uuid = asset["Id"]
 
         if not check_uuid(uuid, RFC4122_RE):
-            self.error("Asset ID invalid (RFC 4122) : {}".format(uuid))
+            self.error(f"Asset ID invalid (RFC 4122) : {uuid}")
 
     def check_assets_cpl_filename_uuid(self, playlist, asset):
         """CPL assets file name UUID check.
@@ -471,12 +469,10 @@ cause issue for some equipements in the field.
                 matching = matching or not is_float and cpl_val == mxf_val
                 if not matching:
                     self.error(
-                        "{} metadata mismatch, CPL claims {} but MXF {}".format(
-                            k, cpl_val, mxf_val
-                        ),
+                        f"{k} metadata mismatch, CPL claims {cpl_val} but MXF {mxf_val}",
                         "mismatch",
                     )
             if k in asset and v not in asset["Probe"]:
-                self.error("Missing MXF Metadata {}".format(v), "missing_mxf")
+                self.error(f"Missing MXF Metadata {v}", "missing_mxf")
             if k not in asset and v in asset["Probe"]:
-                self.error("Missing CPL Metadata {}".format(k), "missing_cpl")
+                self.error(f"Missing CPL Metadata {k}", "missing_cpl")

@@ -1,20 +1,20 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import re
-import time
 import importlib
 import inspect
+import re
+import time
 import traceback
 
-from clairmeta.settings import DCP_CHECK_SETTINGS
-from clairmeta.logger import get_log
 from clairmeta.dcp_check_execution import CheckError, CheckExecution
-from clairmeta.utils.file import ConsoleProgress
 from clairmeta.exception import CheckException
+from clairmeta.logger import get_log
+from clairmeta.settings import DCP_CHECK_SETTINGS
+from clairmeta.utils.file import ConsoleProgress
 
 
-class CheckerBase(object):
+class CheckerBase:
     """Digital Cinema Package checker.
 
     Base class for check module, provide check discover and run utilities.
@@ -79,7 +79,7 @@ class CheckerBase(object):
                 checker.hash_callback = self.hash_callback
                 self.check_modules[v] = checker
             except (ImportError, Exception) as e:
-                self.log.critical("Import error {} : {}".format(module_path, str(e)))
+                self.log.critical(f"Import error {module_path} : {e!s}")
 
     def check(self):
         """Execute the complete check process.
@@ -120,7 +120,7 @@ class CheckerBase(object):
 
     def run_checks(self):
         """Execute all checks."""
-        self.log.info("Checking DCP : {}".format(self.dcp.path))
+        self.log.info(f"Checking DCP : {self.dcp.path}")
 
         for _, checker in self.check_modules.items():
             self.checks += checker.run_checks()
@@ -150,7 +150,7 @@ class CheckerBase(object):
         except CheckException:
             pass
         except Exception:
-            error = CheckError("{}".format(traceback.format_exc()))
+            error = CheckError(f"{traceback.format_exc()}")
             error.name = "internal_error"
             error.parent_name = check_exec.name
             error.doc = "ClairMeta internal error"
@@ -185,7 +185,7 @@ class CheckerBase(object):
 
         """
         if name and not re.match(self.ERROR_NAME_RE, name):
-            raise Exception("Error name invalid : {}".format(name))
+            raise Exception(f"Error name invalid : {name}")
 
         self.errors.append(CheckError(message, name.lower(), doc))
 

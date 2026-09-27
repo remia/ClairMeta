@@ -1,9 +1,8 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import unittest
 import os
-
+import unittest
 
 template_lines = [
     "# Clairmeta - (C) YMAGIS S.A.\n",
@@ -28,7 +27,7 @@ class LicenseTest(unittest.TestCase):
                     fpath = os.path.join(dirpath, f)
                     self.assertTrue(
                         self.file_contain_license(fpath),
-                        msg="Missing license for file {}".format(f),
+                        msg=f"Missing license for file {f}",
                     )
 
 

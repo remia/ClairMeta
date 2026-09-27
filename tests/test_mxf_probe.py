@@ -1,11 +1,11 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import unittest
 import os
+import unittest
 
-from clairmeta.utils.probe import probe_mxf
 from clairmeta.exception import CommandException
+from clairmeta.utils.probe import probe_mxf
 
 
 class TestAssetProbe(unittest.TestCase):

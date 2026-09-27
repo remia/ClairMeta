@@ -3,24 +3,25 @@
 
 import os
 import re
+
 import freetype
 import pycountry
 
-from clairmeta.utils.time import tc_to_frame, frame_to_tc
-from clairmeta.utils.file import human_size
-from clairmeta.utils.sys import keys_by_name_dict, keys_by_pattern_dict
-from clairmeta.utils.xml import parse_xml
-from clairmeta.utils.probe import unwrap_mxf
 from clairmeta.dcp_check import CheckerBase
 from clairmeta.dcp_check_utils import check_xml
 from clairmeta.dcp_utils import (
-    list_cpl_assets,
-    get_reel_for_asset,
-    get_first_reel_for_asset_type,
     get_contentkey_for_asset,
+    get_first_reel_for_asset_type,
+    get_reel_for_asset,
+    list_cpl_assets,
 )
-from clairmeta.settings import DCP_SETTINGS
 from clairmeta.logger import get_log
+from clairmeta.settings import DCP_SETTINGS
+from clairmeta.utils.file import human_size
+from clairmeta.utils.probe import unwrap_mxf
+from clairmeta.utils.sys import keys_by_name_dict, keys_by_pattern_dict
+from clairmeta.utils.time import frame_to_tc, tc_to_frame
+from clairmeta.utils.xml import parse_xml
 
 
 def collect_subtitle_elements(node, name):
@@ -74,7 +75,7 @@ def count_subtitle_elements(node, name):
     return len(collect_subtitle_elements(node, name))
 
 
-class SubtitleUtils(object):
+class SubtitleUtils:
     def __init__(self, dcp):
         self.dcp = dcp
 
@@ -153,15 +154,15 @@ class SubtitleUtils(object):
         if self.dcp.schema == "Interop":
             if re.match(tick_simple_pattern, tc):
                 frame = self.ticks_to_frame(tc, edit_rate)
-                tc = "00:00:00:{:02d}".format(frame)
+                tc = f"00:00:00:{frame:02d}"
             elif re.match(tick_pattern, tc):
                 ticks = int(re.match(tick_pattern, tc).groupdict()["Tick"])
                 frame = self.ticks_to_frame(ticks, edit_rate)
-                tc = re.sub(r":\d{3}$", ":{:02d}".format(frame), tc)
+                tc = re.sub(r":\d{3}$", f":{frame:02d}", tc)
             elif re.match(fract_pattern, tc):
                 fract = int(re.match(fract_pattern, tc).groupdict()["Fract"])
-                frame = int(float("0.{}".format(fract)) * edit_rate)
-                tc = re.sub(r"\.\d{1,3}$", ":{:02d}".format(frame), tc)
+                frame = int(float(f"0.{fract}") * edit_rate)
+                tc = re.sub(r"\.\d{1,3}$", f":{frame:02d}", tc)
 
         return tc_to_frame(tc, edit_rate)
 
@@ -215,7 +216,7 @@ class SubtitleUtils(object):
 class Checker(CheckerBase):
     def __init__(self, dcp):
         self.st_util = SubtitleUtils(dcp)
-        super(Checker, self).__init__(dcp)
+        super().__init__(dcp)
 
     def run_checks(self):
         for cpl in self.dcp._list_cpl:
@@ -248,7 +249,7 @@ class Checker(CheckerBase):
                     k = get_contentkey_for_asset(self.dcp, asset_node)
                     unwrap_args = ["-k", k]
             except Exception as e:
-                get_log().info("Subtitle inspection skipped : {}".format(str(e)))
+                get_log().info(f"Subtitle inspection skipped : {e!s}")
                 return
 
             with unwrap_mxf(path, args=unwrap_args) as folder:
@@ -281,7 +282,7 @@ class Checker(CheckerBase):
         ext = os.path.splitext(asset["Path"])[-1].lower()
 
         if ext != extension_by_schema[self.dcp.schema]:
-            self.error("Wrong subtitle format for asset {}".format(asset_path))
+            self.error(f"Wrong subtitle format for asset {asset_path}")
 
     def check_subtitle_cpl_xml(self, playlist, asset, folder):
         """Subtitle XML file syntax and structure validation.
@@ -306,9 +307,9 @@ class Checker(CheckerBase):
             label = asset["Probe"]["LabelSetType"]
 
         if not os.path.exists(path):
-            self.error("Subtitle not found : {}".format(path))
+            self.error(f"Subtitle not found : {path}")
         if not os.path.isfile(path):
-            self.error("Subtitle must be a file : {}".format(path))
+            self.error(f"Subtitle must be a file : {path}")
 
         check_xml(self, path, namespace, label, self.dcp.schema)
 
@@ -330,8 +331,8 @@ class Checker(CheckerBase):
 
         if reel_no and reel_no != reel_cpl:
             self.error(
-                "Subtitle file indicate Reel {} but actually "
-                "used in Reel {}".format(reel_no, reel_cpl)
+                f"Subtitle file indicate Reel {reel_no} but actually "
+                f"used in Reel {reel_cpl}"
             )
 
     def check_subtitle_cpl_language(self, playlist, asset, folder):
@@ -360,7 +361,7 @@ class Checker(CheckerBase):
             st_lang_obj = lookup_language(st_lang)
         except LookupError:
             self.error(
-                "Subtitle language from XML could not be detected : {}".format(st_lang)
+                f"Subtitle language from XML could not be detected : {st_lang}"
             )
 
         cpl_lang = asset.get("Language")
@@ -370,14 +371,12 @@ class Checker(CheckerBase):
         cpl_lang_obj = lookup_language(cpl_lang)
         if not cpl_lang_obj:
             self.error(
-                "Subtitle language from CPL could not be detected : {}".format(cpl_lang)
+                f"Subtitle language from CPL could not be detected : {cpl_lang}"
             )
 
         if st_lang_obj != cpl_lang_obj:
             self.error(
-                "Subtitle language mismatch, CPL claims {} but XML {}".format(
-                    cpl_lang_obj.name, st_lang_obj.name
-                )
+                f"Subtitle language mismatch, CPL claims {cpl_lang_obj.name} but XML {st_lang_obj.name}"
             )
 
     def check_subtitle_cpl_loadfont(self, playlist, asset, folder):
@@ -410,7 +409,7 @@ class Checker(CheckerBase):
         if text_elems and len(loadfont_elems) != 1:
             self.error(
                 "Text based subtitle shall contain one and only one "
-                "LoadFont element, found {}".format(len(loadfont_elems))
+                f"LoadFont element, found {len(loadfont_elems)}"
             )
         if text_elems and not loadfont_elems[0]:
             self.error("LoadFont element with an empty ID attribute")
@@ -437,9 +436,7 @@ class Checker(CheckerBase):
         for ref in font_ref:
             if ref != font_id:
                 self.error(
-                    "Subtitle reference unknown font {} (loaded {})".format(
-                        ref, font_id
-                    )
+                    f"Subtitle reference unknown font {ref} (loaded {font_id})"
                 )
 
     def check_subtitle_cpl_font(self, playlist, asset, folder):
@@ -455,7 +452,7 @@ class Checker(CheckerBase):
             return
 
         if not os.path.exists(path):
-            self.error("Subtitle missing font file : {}".format(uri))
+            self.error(f"Subtitle missing font file : {uri}")
 
     def check_subtitle_cpl_font_size(self, playlist, asset, folder):
         """Subtitle maximum font size.
@@ -478,9 +475,7 @@ class Checker(CheckerBase):
 
         if font_size > font_max_size:
             self.error(
-                "Subtitle font maximum size is {}, got {}".format(
-                    human_size(font_max_size), human_size(font_size)
-                )
+                f"Subtitle font maximum size is {human_size(font_max_size)}, got {human_size(font_size)}"
             )
 
     def check_subtitle_cpl_font_glyph(self, playlist, asset, folder):
@@ -549,14 +544,14 @@ class Checker(CheckerBase):
             ) - self.st_util.st_tc_frames(st_in, editrate)
 
             if dur <= 0:
-                self.error("Subtitle {} null or negative duration".format(st_idx))
+                self.error(f"Subtitle {st_idx} null or negative duration")
 
             f_s, f_d = self.st_util.get_subtitle_fade_io(st, editrate)
             if f_s and f_s > dur:
-                self.error("Subtitle {} FadeUpTime longer than duration".format(st_idx))
+                self.error(f"Subtitle {st_idx} FadeUpTime longer than duration")
             if f_d and f_d > dur:
                 self.error(
-                    "Subtitle {} FadeDownTime longer than duration".format(st_idx)
+                    f"Subtitle {st_idx} FadeDownTime longer than duration"
                 )
 
     def check_subtitle_cpl_concurrent_visibility(self, playlist, asset, folder):
@@ -596,9 +591,7 @@ class Checker(CheckerBase):
                 st = subtitles[0][st_list[idx][0]]
                 st_in, st_out = st["Subtitle@TimeIn"], st["Subtitle@TimeOut"]
                 self.error(
-                    "Too many subtitles ({}) visible at once between {} and {}".format(
-                        v, st_in, st_out
-                    )
+                    f"Too many subtitles ({v}) visible at once between {st_in} and {st_out}"
                 )
 
     def check_subtitle_cpl_max_elements(self, playlist, asset, folder):
@@ -650,8 +643,7 @@ class Checker(CheckerBase):
         last_tc = 0
         for st in subtitles[0]:
             st_out = self.st_util.st_tc_frames(st["Subtitle@TimeOut"], st_rate)
-            if st_out > last_tc:
-                last_tc = st_out
+            last_tc = max(last_tc, st_out)
 
         cpl_rate = asset["EditRate"]
         cpl_dur = asset["Duration"]
@@ -661,12 +653,8 @@ class Checker(CheckerBase):
         if last_tc_st > cpl_dur:
             reel_cpl = get_reel_for_asset(playlist, asset["Id"])["Position"]
             self.error(
-                "Subtitle exceed track duration. Subtitle {} - Track {} "
-                "- Reel {}".format(
-                    frame_to_tc(last_tc_st, cpl_rate),
-                    frame_to_tc(cpl_dur, cpl_rate),
-                    reel_cpl,
-                )
+                f"Subtitle exceed track duration. Subtitle {frame_to_tc(last_tc_st, cpl_rate)} - Track {frame_to_tc(cpl_dur, cpl_rate)} "
+                f"- Reel {reel_cpl}"
             )
 
     def check_subtitle_cpl_editrate(self, playlist, asset, folder):
@@ -685,8 +673,8 @@ class Checker(CheckerBase):
         if self.dcp.schema == "SMPTE":
             if st_rate != cpl_rate:
                 self.error(
-                    "Subtitle EditRate mismatch, Subtitle claims {} but CPL "
-                    "{}".format(st_rate, cpl_rate)
+                    f"Subtitle EditRate mismatch, Subtitle claims {st_rate} but CPL "
+                    f"{cpl_rate}"
                 )
 
     def check_subtitle_cpl_entry_point(self, playlist, asset, folder):
@@ -703,7 +691,7 @@ class Checker(CheckerBase):
         cpl_entry = asset["EntryPoint"]
 
         if cpl_entry != 0:
-            self.error("Timed Text EntryPoint must be 0 but found {}".format(cpl_entry))
+            self.error(f"Timed Text EntryPoint must be 0 but found {cpl_entry}")
 
     def check_subtitle_cpl_uuid(self, playlist, asset, folder):
         """Subtitle UUID coherence.
@@ -730,22 +718,20 @@ class Checker(CheckerBase):
             cpl_uuid = asset["Id"].lower()
             if st_uuid != cpl_uuid:
                 self.error(
-                    "Subtitle UUID mismatch, Subtitle claims {} but CPL {}".format(
-                        st_uuid, cpl_uuid
-                    )
+                    f"Subtitle UUID mismatch, Subtitle claims {st_uuid} but CPL {cpl_uuid}"
                 )
             folder_name = os.path.basename(folder).lower()
             if st_uuid not in folder_name:
                 self.error(
-                    "Subtitle directory name unexpected, should contain {} but"
-                    " got {}".format(st_uuid, folder_name)
+                    f"Subtitle directory name unexpected, should contain {st_uuid} but"
+                    f" got {folder_name}"
                 )
         elif self.dcp.schema == "SMPTE":
             resource_uuid = asset["Probe"].get("AssetID", "").lower()
             if resource_uuid != st_uuid:
                 self.error(
-                    "Subtitle UUID mismatch, Subtitle claims {} but MXF "
-                    "{}".format(st_uuid, resource_uuid)
+                    f"Subtitle UUID mismatch, Subtitle claims {st_uuid} but MXF "
+                    f"{resource_uuid}"
                 )
 
     def check_subtitle_cpl_uuid_case(self, playlist, asset, folder):
@@ -761,16 +747,12 @@ class Checker(CheckerBase):
             cpl_uuid = asset["Id"]
             if st_uuid != cpl_uuid and st_uuid.lower() == cpl_uuid.lower():
                 self.error(
-                    "Subtitle UUID case mismatch, Subtitle {} - CPL {}".format(
-                        st_uuid, cpl_uuid
-                    )
+                    f"Subtitle UUID case mismatch, Subtitle {st_uuid} - CPL {cpl_uuid}"
                 )
             folder_name = os.path.basename(folder)
             if st_uuid not in folder_name and st_uuid.lower() in folder_name.lower():
                 self.error(
-                    "Subtitle directory name case mismatch, Folder {} - CPL {}".format(
-                        st_uuid, folder_name
-                    )
+                    f"Subtitle directory name case mismatch, Folder {st_uuid} - CPL {folder_name}"
                 )
 
     def check_subtitle_cpl_duplicated_uuid(self, playlist, asset, folder):
@@ -864,11 +846,11 @@ class Checker(CheckerBase):
 
             for a, p in zip(valign, vpos):
                 if a == "top" and p == 0:
-                    self.error("Subtitle {} is out of screen (top)".format(st_idx))
+                    self.error(f"Subtitle {st_idx} is out of screen (top)")
                 if a == "bottom" and p == 0:
                     self.error(
-                        "Subtitle {} is nearly out of screen (bottom), some "
-                        "characters will be cut".format(st_idx)
+                        f"Subtitle {st_idx} is nearly out of screen (bottom), some "
+                        "characters will be cut"
                     )
 
     def check_subtitle_cpl_image(self, playlist, asset, folder):
@@ -894,8 +876,7 @@ class Checker(CheckerBase):
                 continue
             if not os.path.exists(os.path.join(folder, img)):
                 self.error(
-                    "Subtitle image reference {} not found in folder {}"
-                    "".format(img, os.path.relpath(folder, self.dcp.path))
+                    f"Subtitle image reference {img} not found in folder {os.path.relpath(folder, self.dcp.path)}"
                 )
 
     def check_subtitle_cpl_first_tt_event(self, playlist, asset, folder):
@@ -911,7 +892,7 @@ class Checker(CheckerBase):
         first_reel_of_st = get_first_reel_for_asset_type(playlist, "Subtitle")
         # We are probably checking a Caption track
         if not first_reel_of_st:
-            return None
+            return
         first_reel_of_st = first_reel_of_st["Position"]
         if not first_reel_of_st or reel_cpl != first_reel_of_st:
             return
@@ -931,5 +912,5 @@ class Checker(CheckerBase):
         if first_tc_frames < 4 * st_editrate:
             self.error(
                 "First Timed Text event of CPL happens "
-                "earlier than 4 seconds: {}".format(first_tc)
+                f"earlier than 4 seconds: {first_tc}"
             )

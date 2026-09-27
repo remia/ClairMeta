@@ -4,13 +4,13 @@
 import os
 import re
 
-from clairmeta.dcp_utils import list_cpl_assets, cpl_probe_asset
 from clairmeta.dcp_check import CheckerBase
+from clairmeta.dcp_utils import cpl_probe_asset, list_cpl_assets
 
 
 class Checker(CheckerBase):
     def __init__(self, dcp):
-        super(Checker, self).__init__(dcp)
+        super().__init__(dcp)
 
     def run_checks(self):
         """Execute all checks."""
@@ -33,7 +33,7 @@ class Checker(CheckerBase):
                     list_empty_dir.append(os.path.relpath(fullpath, self.dcp.path))
 
         if list_empty_dir:
-            self.error("Empty directories detected : {}".format(list_empty_dir))
+            self.error(f"Empty directories detected : {list_empty_dir}")
 
     def check_dcp_hidden_files(self):
         """Hidden files detection.
@@ -46,7 +46,7 @@ class Checker(CheckerBase):
             if os.path.basename(f).startswith(".")
         ]
         if hidden_files:
-            self.error("Hidden files detected : {}".format(hidden_files))
+            self.error(f"Hidden files detected : {hidden_files}")
 
     def check_dcp_foreign_files(self):
         """Foreign files detection (not listed in AssetMap).
@@ -80,9 +80,9 @@ class Checker(CheckerBase):
 
         for k, v in restricted_lists.items():
             if len(v) == 0:
-                self.error("Missing {} file".format(k))
+                self.error(f"Missing {k} file")
             if len(v) > 1:
-                self.error("Multiple {} files found".format(k))
+                self.error(f"Multiple {k} files found")
 
     def setup_dcp_link_ov(self):
         """Setup the link VF to OV check and run for each assets."""
@@ -119,7 +119,7 @@ class Checker(CheckerBase):
             for name, xml in xmls:
                 for field in ["Signer", "Signature"]:
                     if field not in xml.keys():
-                        self.error("Missing {} element in {}".format(field, name))
+                        self.error(f"Missing {field} element in {name}")
 
     def check_link_ov_coherence(self):
         """Relink OV/VF sanity checks.
@@ -151,13 +151,12 @@ class Checker(CheckerBase):
             path_ov = ov_dcp_dict["asset_list"].get(uuid)
 
             if not path_ov:
-                self.error("Asset missing ({}) from OV : {}".format(essence, uuid))
+                self.error(f"Asset missing ({essence}) from OV : {uuid}")
 
             asset_path = os.path.join(self.ov_dcp.path, path_ov)
             if not os.path.exists(asset_path):
                 self.error(
-                    "Asset missing ({}) from OV (MXF not found) : {}"
-                    "".format(essence, path_ov)
+                    f"Asset missing ({essence}) from OV (MXF not found) : {path_ov}"
                 )
 
             # Probe asset for later checks

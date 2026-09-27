@@ -1,22 +1,20 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import unittest
 import os
 import platform
+import unittest
 from datetime import datetime
 
-from tests import DCP_MAP, KDM_MAP, KEY
+from clairmeta.dcp import DCP
 from clairmeta.logger import disable_log
 from clairmeta.profile import get_default_profile
-from clairmeta.dcp import DCP
-
-# ruff: noqa: E501
+from tests import DCP_MAP, KDM_MAP, KEY
 
 
 class CheckerTestBase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(CheckerTestBase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         disable_log()
         self.profile = get_default_profile()
         self.profile["bypass"] = ["check_assets_pkl_hash"]
@@ -58,7 +56,7 @@ class DCPCheckTest(CheckerTestBase):
     vf_missing = "check_assets_cpl_missing_from_vf"
 
     def __init__(self, *args, **kwargs):
-        super(DCPCheckTest, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def test_iop_ov(self):
         self.assertTrue(self.check(1))
@@ -153,7 +151,7 @@ class DCPCheckTest(CheckerTestBase):
 
 class DCPCheckReportTest(CheckerTestBase):
     def __init__(self, *args, **kwargs):
-        super(DCPCheckReportTest, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.check(25)
 
     def test_report_metadata(self):

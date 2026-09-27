@@ -1,23 +1,23 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import unittest
 import os
+import unittest
 
-from clairmeta.logger import disable_log
-from clairmeta.dcp_utils import cpl_extract_characteristics
 from clairmeta.dcp_parse import (
     assetmap_parse,
-    volindex_parse,
-    pkl_parse,
     cpl_parse,
     kdm_parse,
+    pkl_parse,
+    volindex_parse,
 )
+from clairmeta.dcp_utils import cpl_extract_characteristics
+from clairmeta.logger import disable_log
 
 
 class ParserTestBase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(ParserTestBase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         disable_log()
 
     def get_file_path(self, name):

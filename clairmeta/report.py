@@ -8,7 +8,7 @@ from datetime import datetime
 from clairmeta.utils.file import human_size
 
 
-class CheckReport(object):
+class CheckReport:
     """Check report listing all checks executions."""
 
     ORDERED_STATUS = [
@@ -86,10 +86,10 @@ class CheckReport(object):
         """Format the report in a human friendly way."""
         report = ""
         report += "Status : {}\n".format("Success" if self.is_valid() else "Fail")
-        report += "Path : {}\n".format(self.dcp.path)
-        report += "Size : {}\n".format(human_size(self.dcp.size))
-        report += "Total check : {}\n".format(self.checks_count())
-        report += "Total time : {:.2f} sec\n".format(self.duration)
+        report += f"Path : {self.dcp.path}\n"
+        report += f"Size : {human_size(self.dcp.size)}\n"
+        report += f"Total check : {self.checks_count()}\n"
+        report += f"Total time : {self.duration:.2f} sec\n"
         report += "\n"
 
         def nested_dict():
@@ -99,7 +99,7 @@ class CheckReport(object):
 
         # Accumulate all failed check and stack them by asset
         for check in self.checks_failed():
-            lines = [". {}".format(check.short_desc())]
+            lines = [f". {check.short_desc()}"]
 
             for error in check.errors:
                 asset = status_map[str(error.criticality)]
@@ -108,8 +108,8 @@ class CheckReport(object):
                     asset = asset[filename]
 
                 desc = error.doc
-                desc = ". {}\n".format(desc) if desc else ""
-                lines.append("{}{}".format(desc, error.message))
+                desc = f". {desc}\n" if desc else ""
+                lines.append(f"{desc}{error.message}")
 
             asset["msg"] = asset.get("msg", []) + ["\n".join(lines)]
 

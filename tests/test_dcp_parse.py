@@ -1,17 +1,17 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import unittest
 import os
+import unittest
 
-from tests import DCP_MAP
-from clairmeta.logger import disable_log
 from clairmeta.dcp import DCP
+from clairmeta.logger import disable_log
+from tests import DCP_MAP
 
 
 class ParserTestBase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(ParserTestBase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         disable_log()
 
     def get_dcp_path(self, dcp_id):
@@ -34,7 +34,7 @@ class DCPParseTest(ParserTestBase):
     vf_missing = "check_assets_cpl_missing_from_vf"
 
     def __init__(self, *args, **kwargs):
-        super(DCPParseTest, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def test_dcp_01(self):
         res = self.parse(1)

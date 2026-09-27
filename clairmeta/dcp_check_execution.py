@@ -24,7 +24,7 @@ def ErrorLevelToString(error_level):
     return STR_FROM_ERROR[error_level]
 
 
-class CheckError(object):
+class CheckError:
     """Error reporting from whithin checks accumulate a list of errors."""
 
     def __init__(self, msg, name="", doc=""):
@@ -37,7 +37,7 @@ class CheckError(object):
 
     def full_name(self):
         if self.name:
-            return "{}_{}".format(self.parent_name, self.name)
+            return f"{self.parent_name}_{self.name}"
         else:
             return self.parent_name
 
@@ -57,7 +57,7 @@ class CheckError(object):
         }
 
 
-class CheckExecution(object):
+class CheckExecution:
     """Check execution with status and related metadatas."""
 
     def __init__(self, func):

@@ -8,7 +8,7 @@ from clairmeta.settings import DCP_SETTINGS
 
 class Checker(CheckerBase):
     def __init__(self, dcp):
-        super(Checker, self).__init__(dcp)
+        super().__init__(dcp)
 
     def run_checks(self):
         for source in self.dcp._list_cpl:
@@ -40,8 +40,7 @@ class Checker(CheckerBase):
 
         if cc > channels:
             self.error(
-                "Invalid Sound ChannelCount, should be less than {} but got {}"
-                "".format(channels, cc)
+                f"Invalid Sound ChannelCount, should be less than {channels} but got {cc}"
             )
 
     def check_sound_cpl_channels_odd(self, playlist, asset):
@@ -61,8 +60,7 @@ class Checker(CheckerBase):
 
         if cc % 2 != 0:
             self.error(
-                "Invalid Sound ChannelCount, should be an even number, got {}"
-                "".format(cc)
+                f"Invalid Sound ChannelCount, should be an even number, got {cc}"
             )
 
     def check_sound_cpl_channel_assignments(self, playlist, asset):
@@ -79,9 +77,7 @@ class Checker(CheckerBase):
 
         if cf in configurations and cf != 4:
             self.error(
-                'Detected channel assignments "{}", but expected "{}"'.format(
-                    configurations[cf][0], configurations[4][0]
-                )
+                f'Detected channel assignments "{configurations[cf][0]}", but expected "{configurations[4][0]}"'
             )
 
     def check_sound_cpl_format(self, playlist, asset):
@@ -99,8 +95,8 @@ class Checker(CheckerBase):
             label, min_cc, max_cc = configurations[cf]
             if label and cc < min_cc or cc > max_cc:
                 self.error(
-                    "Invalid Sound ChannelCount, {} require between {} and {} "
-                    "channels, got {}".format(label, min_cc, max_cc, cc)
+                    f"Invalid Sound ChannelCount, {label} require between {min_cc} and {max_cc} "
+                    f"channels, got {cc}"
                 )
 
     def check_sound_cpl_sampling(self, playlist, asset):
@@ -115,7 +111,7 @@ class Checker(CheckerBase):
 
         if sr not in rates:
             self.error(
-                "Invalid Sound SamplingRate, expected {} but got {}".format(rates, sr)
+                f"Invalid Sound SamplingRate, expected {rates} but got {sr}"
             )
 
     def check_sound_cpl_quantization(self, playlist, asset):
@@ -130,9 +126,7 @@ class Checker(CheckerBase):
 
         if depth != bitdepth:
             self.error(
-                "Invalid Sound Quantization, expected {} but got {}".format(
-                    bitdepth, depth
-                )
+                f"Invalid Sound Quantization, expected {bitdepth} but got {depth}"
             )
 
     def check_sound_cpl_blockalign(self, playlist, asset):
@@ -147,6 +141,6 @@ class Checker(CheckerBase):
 
         if al != cc * align:
             self.error(
-                "Invalid Sound BlockAlign, expected {} but got {} (it should "
-                "be ChannelCount x 3)".format(cc * align, al)
+                f"Invalid Sound BlockAlign, expected {cc * align} but got {al} (it should "
+                "be ChannelCount x 3)"
             )

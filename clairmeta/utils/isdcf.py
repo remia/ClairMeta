@@ -141,9 +141,7 @@ def parse_isdcf_string(isdcf_str):
     if len(fields_list) != 12:
         error_list.append(
             "ContentTitle should have 12 parts to be fully compliant with"
-            " ISDCF naming convention version {}, {} part(s) found".format(
-                dcnc_version, len(fields_list)
-            )
+            f" ISDCF naming convention version {dcnc_version}, {len(fields_list)} part(s) found"
         )
 
     # Parsing title with some robustness to missing / additionals fields
@@ -162,7 +160,7 @@ def parse_isdcf_string(isdcf_str):
             if idx_field == 0 and not match:
                 error_list.append(
                     "ContentTitle Film Name does not respect naming convention"
-                    " rules : {}".format(field)
+                    f" rules : {field}"
                 )
             elif match and idx_rule < max_field_shift:
                 fields_dict[name].update(match.groupdict(DEFAULT))
@@ -178,14 +176,12 @@ def parse_isdcf_string(isdcf_str):
 
         if not matched:
             error_list.append(
-                "ContentTitle Part {} not matching any naming convention field".format(
-                    field
-                )
+                f"ContentTitle Part {field} not matching any naming convention field"
             )
 
     for name, _ in RULES[dcnc_version].items():
         if name not in fields_matched:
-            error_list.append("Field {} not found in ContentTitle".format(name))
+            error_list.append(f"Field {name} not found in ContentTitle")
 
     fields_dict = post_parse_isdcf(fields_dict)
     return fields_dict, error_list

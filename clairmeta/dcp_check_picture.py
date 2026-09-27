@@ -1,15 +1,15 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-from clairmeta.utils.time import compare_ratio
 from clairmeta.dcp_check import CheckerBase
 from clairmeta.dcp_utils import list_cpl_assets
 from clairmeta.settings import DCP_SETTINGS
+from clairmeta.utils.time import compare_ratio
 
 
 class Checker(CheckerBase):
     def __init__(self, dcp):
-        super(Checker, self).__init__(dcp)
+        super().__init__(dcp)
         self.settings = DCP_SETTINGS["picture"]
 
     def run_checks(self):
@@ -80,17 +80,13 @@ class Checker(CheckerBase):
 
             if not any([resolution in res for res in dci_resolutions]):
                 self.error(
-                    "Picture has non DCI compliant pixel array size {}".format(
-                        resolution
-                    ),
+                    f"Picture has non DCI compliant pixel array size {resolution}",
                     "dci",
                 )
 
             if not any([resolution in res for res in rdd52_array_sizes]):
                 self.error(
-                    "Picture has non RDD52 compliant pixel array size {}".format(
-                        resolution
-                    ),
+                    f"Picture has non RDD52 compliant pixel array size {resolution}",
                     "rdd52",
                 )
 
@@ -132,8 +128,8 @@ class Checker(CheckerBase):
             is_dci = resolution_name in levels_map
             if is_dci and levels_map[resolution_name] != levels:
                 self.error(
-                    "Picture must have {} wavelet transform levels, {}"
-                    " found".format(levels_map[resolution_name], levels)
+                    f"Picture must have {levels_map[resolution_name]} wavelet transform levels, {levels}"
+                    " found"
                 )
 
     def check_picture_cpl_max_bitrate(self, playlist, asset):
@@ -153,9 +149,7 @@ class Checker(CheckerBase):
 
             if max_bitrate > t_bitrate:
                 self.error(
-                    "Exceed DCI maximum bitrate ({} Mb/s) : {} Mb/s".format(
-                        t_bitrate, max_bitrate
-                    )
+                    f"Exceed DCI maximum bitrate ({t_bitrate} Mb/s) : {max_bitrate} Mb/s"
                 )
 
     def check_picture_cpl_avg_bitrate(self, playlist, asset):
@@ -173,8 +167,8 @@ class Checker(CheckerBase):
 
             if avg_bitrate > t_bitrate:
                 self.error(
-                    "Exceed DCI safe average bitrate ({} Mb/s) "
-                    ": {} Mb/s".format(t_bitrate, avg_bitrate)
+                    f"Exceed DCI safe average bitrate ({t_bitrate} Mb/s) "
+                    f": {avg_bitrate} Mb/s"
                 )
 
     def check_picture_cpl_framerate(self, playlist, asset):
@@ -195,16 +189,12 @@ class Checker(CheckerBase):
             if resolution in self.settings["resolutions"]["2K"]:
                 if editrate not in editrate_map["2K"][dimension]:
                     self.error(
-                        "Invalid EditRate {} for 2K {} content".format(
-                            editrate, dimension
-                        )
+                        f"Invalid EditRate {editrate} for 2K {dimension} content"
                     )
             elif resolution in self.settings["resolutions"]["4K"]:
                 if editrate not in editrate_map["4K"][dimension]:
                     self.error(
-                        "Invalid EditRate {} for 4K {} content".format(
-                            editrate, dimension
-                        )
+                        f"Invalid EditRate {editrate} for 4K {dimension} content"
                     )
 
     def check_picture_cpl_archival_framerate(self, playlist, asset):
@@ -222,9 +212,7 @@ class Checker(CheckerBase):
         for archival_editrate in archival_editrates:
             if compare_ratio(editrate, archival_editrate):
                 self.error(
-                    "Archival EditRate {} may not play safely on all hardware".format(
-                        editrate
-                    )
+                    f"Archival EditRate {editrate} may not play safely on all hardware"
                 )
 
     def check_picture_cpl_hfr_framerate(self, playlist, asset):
@@ -241,8 +229,8 @@ class Checker(CheckerBase):
 
         if editrate >= series2_map[dimension]:
             self.error(
-                "EditRate {} require an HFR capable projection server "
-                "(Series II), may not play safely on all hardware".format(editrate)
+                f"EditRate {editrate} require an HFR capable projection server "
+                "(Series II), may not play safely on all hardware"
             )
 
     def check_picture_cpl_editrate_framerate(self, playlist, asset):

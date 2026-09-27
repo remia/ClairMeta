@@ -4,15 +4,15 @@
 import os
 import re
 
-from clairmeta.utils.uuid import check_uuid
 from clairmeta.dcp_check import CheckerBase
 from clairmeta.dcp_check_utils import check_xml
 from clairmeta.dcp_utils import list_am_assets
+from clairmeta.utils.uuid import check_uuid
 
 
 class Checker(CheckerBase):
     def __init__(self, dcp):
-        super(Checker, self).__init__(dcp)
+        super().__init__(dcp)
 
     def run_checks(self):
         for source in self.dcp._list_am:
@@ -57,7 +57,7 @@ class Checker(CheckerBase):
         """
         volume_count = am["Info"]["AssetMap"]["VolumeCount"]
         if volume_count != 1:
-            self.error("Invalid VolumeCount value: {}".format(volume_count))
+            self.error(f"Invalid VolumeCount value: {volume_count}")
 
     def check_am_name(self, am):
         """AssetMap file name respect DCP standard.
@@ -127,7 +127,7 @@ class Checker(CheckerBase):
         """
         uuid, _, _ = asset
         if not check_uuid(uuid):
-            self.error("Invalid uuid found : {}".format(uuid))
+            self.error(f"Invalid uuid found : {uuid}")
 
     def check_assets_am_volindex_one(self, am, asset):
         """AssetMap Asset VolumeIndex element shall be 1 or absent.
@@ -139,9 +139,7 @@ class Checker(CheckerBase):
         asset_vol = asset["ChunkList"]["Chunk"].get("VolumeIndex")
         if asset_vol and asset_vol != 1:
             self.error(
-                "VolIndex is now deprecated and shall always be 1, got {}".format(
-                    asset_vol
-                )
+                f"VolIndex is now deprecated and shall always be 1, got {asset_vol}"
             )
 
     def check_assets_am_path(self, am, asset):
@@ -158,19 +156,19 @@ class Checker(CheckerBase):
         path_segments = list(filter(None, path.split("/")))
         path_segments_count = len(path_segments)
         if path_segments_count > 10:
-            self.error(">10 path segments: {}".format(path_segments_count))
+            self.error(f">10 path segments: {path_segments_count}")
 
         max_path_seg = max(map(len, path_segments))
         if max_path_seg > 100:
-            self.error("Path segment >100 characters: {}".format(max_path_seg))
+            self.error(f"Path segment >100 characters: {max_path_seg}")
 
         if len(path) > 100:
-            self.error("Path >100 characters: {}".format(len(path)))
+            self.error(f"Path >100 characters: {len(path)}")
 
         path_invalid_chars = re.findall(r"[^a-zA-Z0-9._/-]", path)
         if path_invalid_chars:
             unique_char_str = ", ".join(sorted(set(path_invalid_chars)))
-            self.error("Invalid characters in path: {}".format(unique_char_str))
+            self.error(f"Invalid characters in path: {unique_char_str}")
 
         if path[0] == "/":
             self.error("Path is not relative")
@@ -180,7 +178,7 @@ class Checker(CheckerBase):
             self.error("Path points outside of DCP root")
 
         if not os.path.isfile(os.path.join(self.dcp.path, path)):
-            self.error("Missing asset file: {}".format(os.path.basename(path)))
+            self.error(f"Missing asset file: {os.path.basename(path)}")
 
     def check_assets_am_offset(self, am, asset):
         """AssetMap Chunk Offset check
@@ -196,7 +194,7 @@ class Checker(CheckerBase):
 
         offset = chunk["Offset"]
         if offset != 0:
-            self.error("Invalid offset value {}".format(offset))
+            self.error(f"Invalid offset value {offset}")
 
     def check_assets_am_size(self, am, asset):
         """AssetMap assets size check.
@@ -219,6 +217,6 @@ class Checker(CheckerBase):
 
             if length != actual_size:
                 self.error(
-                    "Invalid size value, expected {} but got "
-                    "{}".format(length, actual_size)
+                    f"Invalid size value, expected {length} but got "
+                    f"{actual_size}"
                 )

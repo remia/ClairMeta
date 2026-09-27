@@ -166,7 +166,7 @@ def keys_by_name_dict(in_dict, name, matchs=None):
     [1, 2, 3]
 
     """
-    p = r"^{}$".format(name)
+    p = rf"^{name}$"
     return keys_by_pattern_dict(in_dict, [p], matchs)
 
 
@@ -195,7 +195,7 @@ def keys_by_pattern_dict(in_dict, patterns, matchs=None):
     if isinstance(in_dict, dict):
         for k, v in in_dict.items():
             if any([re.search(p, k) for p in patterns]):
-                matchs.append(in_dict[k])
+                matchs.append(v)
             keys_by_pattern_dict(v, patterns, matchs)
     if isinstance(in_dict, list):
         [keys_by_pattern_dict(item, patterns, matchs) for item in in_dict]

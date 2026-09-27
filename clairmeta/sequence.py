@@ -4,11 +4,11 @@
 import os
 
 from clairmeta.sequence_check import check_sequence
-from clairmeta.utils.sys import key_by_path_dict
 from clairmeta.utils.probe import probe_folder
+from clairmeta.utils.sys import key_by_path_dict
 
 
-class Sequence(object):
+class Sequence:
     """Image file sequence abstraction."""
 
     def __init__(self, path):
@@ -22,7 +22,7 @@ class Sequence(object):
 
         """
         if not os.path.isdir(path):
-            raise ValueError("{} is not a valid folder".format(path))
+            raise ValueError(f"{path} is not a valid folder")
 
         self.path = path
         self.probe_folder = probe_folder(path)
@@ -71,14 +71,10 @@ class Sequence(object):
             if isinstance(expect_val, list):
                 if val not in expect_val:
                     raise ValueError(
-                        "{} - Invalid {}, got {} but expected {}".format(
-                            folder, key, val, expect_val
-                        )
+                        f"{folder} - Invalid {key}, got {val} but expected {expect_val}"
                     )
             else:
                 if val != expect_val:
                     raise ValueError(
-                        "{} - Invalid {}, got {} but expected {}".format(
-                            folder, key, val, expect_val
-                        )
+                        f"{folder} - Invalid {key}, got {val} but expected {expect_val}"
                     )

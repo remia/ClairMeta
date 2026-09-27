@@ -2,21 +2,21 @@
 # See LICENSE for more information
 
 import collections
+import json
+import os
 import platform
 import unittest
-import os
-import json
 from collections import OrderedDict
 from xml.etree import ElementTree as ET
 
-from tests import DCP_MAP
-from clairmeta.logger import disable_log
 from clairmeta.cli import get_parser
+from clairmeta.logger import disable_log
+from tests import DCP_MAP
 
 
 class CliTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(CliTest, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         disable_log()
 
     def get_file_path(self, name):

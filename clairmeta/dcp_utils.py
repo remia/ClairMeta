@@ -1,14 +1,13 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import os
 import base64
 import binascii
+import os
 import uuid
 
-from clairmeta.utils.sys import key_by_path_dict
 from clairmeta.utils.probe import probe_mxf, stat_mxf_audio
-
+from clairmeta.utils.sys import key_by_path_dict
 
 #
 # Generators to iterate on assets
@@ -321,6 +320,6 @@ def kdm_extract_key_info(data):
     fields["KeyId"] = str(uuid.UUID(bytes=data[56:72]))
     fields["NotValidBefore"] = data[72:97].decode("ascii")
     fields["NotValidAfter"] = data[97:122].decode("ascii")
-    fields["ContentKey"] = binascii.hexlify((data[122:138])).decode()
+    fields["ContentKey"] = binascii.hexlify(data[122:138]).decode()
 
     return fields

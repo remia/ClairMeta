@@ -4,8 +4,8 @@
 import os
 
 from clairmeta.settings import SEQUENCE_SETTINGS
-from clairmeta.utils.sys import number_is_close
 from clairmeta.utils.file import parse_name
+from clairmeta.utils.sys import number_is_close
 
 
 def check_sequence(path, allowed_extensions, ignore_files=None, ignore_dirs=None):
@@ -24,7 +24,7 @@ def check_sequence(path, allowed_extensions, ignore_files=None, ignore_dirs=None
 
     """
     if not os.path.isdir(path):
-        raise ValueError("Folder not found : {}".format(path))
+        raise ValueError(f"Folder not found : {path}")
     if not os.listdir(path):
         raise ValueError("Empty folder")
     if not isinstance(allowed_extensions, dict):
@@ -81,7 +81,7 @@ def check_sequence_folder(dirpath, filenames, allowed_extensions):
 
     # Check that this reference is conform
     if extension not in allowed_extensions:
-        raise ValueError("extension {} not authorized".format(extension))
+        raise ValueError(f"extension {extension} not authorized")
 
     # Then check that all subsequent files are identical
     for f in filenames[1:]:
@@ -93,15 +93,11 @@ def check_sequence_folder(dirpath, filenames, allowed_extensions):
 
         if current_filename != filename:
             raise ValueError(
-                "Filename difference, {} but expected {}".format(
-                    current_filename, filename
-                )
+                f"Filename difference, {current_filename} but expected {filename}"
             )
         if current_ext != extension:
             raise ValueError(
-                "File extension difference, {} but expected {}".format(
-                    current_filename, extension
-                )
+                f"File extension difference, {current_filename} but expected {extension}"
             )
         if not number_is_close(current_filesize, filesize, rtol=size_rtol):
             raise ValueError(
@@ -118,4 +114,4 @@ def check_sequence_folder(dirpath, filenames, allowed_extensions):
     sequence_idx.sort()
     for idx, fno in enumerate(sequence_idx, sequence_idx[0]):
         if idx != fno:
-            raise ValueError("File sequence jump found, file {} not found".format(idx))
+            raise ValueError(f"File sequence jump found, file {idx} not found")

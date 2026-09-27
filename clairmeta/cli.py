@@ -2,23 +2,22 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-from __future__ import print_function
 
-import os
 import argparse
-import sys
 import json
-import dicttoxml
+import os
 import pprint
+import sys
+
+import dicttoxml
 
 from clairmeta import DCP, Sequence
-from clairmeta.logger import disable_log
 from clairmeta.info import __version__
-from clairmeta.profile import load_profile, DCP_CHECK_PROFILE
+from clairmeta.logger import disable_log
+from clairmeta.profile import DCP_CHECK_PROFILE, load_profile
 from clairmeta.settings import SEQUENCE_SETTINGS
-from clairmeta.utils.xml import prettyprint_xml
 from clairmeta.utils.file import ConsoleProgress
-
+from clairmeta.utils.xml import prettyprint_xml
 
 package_type_map = {
     "dcp": DCP,
@@ -79,7 +78,7 @@ def cli_check(args):
 
     except Exception as e:
         status = False
-        print("Error : {}".format(e))
+        print(f"Error : {e}")
 
     msg = "{} - {} - Check {}".format(
         args.type.upper(), args.path, "succeeded" if status else "failed"
@@ -111,12 +110,12 @@ def cli_probe(args):
 
         return True, msg
     except Exception as e:
-        return False, "Error : {}".format(e)
+        return False, f"Error : {e}"
 
 
 def get_parser():
     global_parser = argparse.ArgumentParser(
-        description="Clairmeta Command Line Interface {}".format(__version__)
+        description=f"Clairmeta Command Line Interface {__version__}"
     )
     subparsers = global_parser.add_subparsers()
 

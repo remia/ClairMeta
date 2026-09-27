@@ -3,7 +3,6 @@
 
 import os
 
-
 LOG_SETTINGS = {
     "level": os.getenv("CLAIRMETA_LOG_LEVEL", "INFO"),
     "enable_console": os.getenv("CLAIRMETA_LOG_CONSOLE", "ON"),

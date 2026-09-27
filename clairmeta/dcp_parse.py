@@ -3,13 +3,13 @@
 
 import os
 
-from clairmeta.utils.isdcf import parse_isdcf_string
-from clairmeta.utils.xml import parse_xml
-from clairmeta.utils.time import frame_to_tc, format_ratio
-from clairmeta.utils.sys import all_keys_in_dict
-from clairmeta.settings import DCP_SETTINGS
-from clairmeta.logger import get_log
 from clairmeta.exception import ProbeException
+from clairmeta.logger import get_log
+from clairmeta.settings import DCP_SETTINGS
+from clairmeta.utils.isdcf import parse_isdcf_string
+from clairmeta.utils.sys import all_keys_in_dict
+from clairmeta.utils.time import format_ratio, frame_to_tc
+from clairmeta.utils.xml import parse_xml
 
 
 def discover_schema(node):
@@ -43,7 +43,7 @@ def generic_parse(path, root_name, force_list=(), namespaces=DCP_SETTINGS["xmlns
                 "Info": {root_name: node},
             }
     except Exception as e:
-        get_log().error("Error parsing XML {} : {}".format(path, str(e)))
+        get_log().error(f"Error parsing XML {path} : {e!s}")
 
 
 def assetmap_parse(path):

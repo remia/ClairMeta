@@ -1,20 +1,20 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
+import contextlib
 import os
 import platform
 import subprocess
-import xmltodict
-import contextlib
 from shutil import which
 
-from clairmeta.utils.sys import transform_keys_dict, try_convert_number, camelize
-from clairmeta.utils.file import temporary_dir, parse_name
-from clairmeta.utils.time import format_ratio
-from clairmeta.settings import DCP_SETTINGS
-from clairmeta.logger import get_log
-from clairmeta.exception import CommandException
+import xmltodict
 
+from clairmeta.exception import CommandException
+from clairmeta.logger import get_log
+from clairmeta.settings import DCP_SETTINGS
+from clairmeta.utils.file import parse_name, temporary_dir
+from clairmeta.utils.sys import camelize, transform_keys_dict, try_convert_number
+from clairmeta.utils.time import format_ratio
 
 win32 = platform.system() == "Windows"
 
@@ -57,7 +57,7 @@ def execute_command(cmd_args):
 
     p = subprocess.Popen(cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if p.returncode:
-        raise CommandException("Error calling process : {}".format(cmd_args[0]))
+        raise CommandException(f"Error calling process : {cmd_args[0]}")
 
     stdout, stderr = p.communicate()
 
@@ -89,9 +89,9 @@ def probe_mxf(path, stereoscopic=False):
 
     """
     if not os.path.isfile(path):
-        raise CommandException("File not found : {}".format(path))
+        raise CommandException(f"File not found : {path}")
     if not check_command(ASDCP_INFO_CMD):
-        raise CommandException("{} not available".format(ASDCP_INFO_CMD))
+        raise CommandException(f"{ASDCP_INFO_CMD} not available")
 
     # We don't want asdcp-info to report error in case of bitrate exceeded
     # We do our own check in Clairmeta.
@@ -205,9 +205,9 @@ def unwrap_mxf(path, prefix=None, args=[]):
 
     """
     if not os.path.isfile(path):
-        raise CommandException("File not found : {}".format(path))
+        raise CommandException(f"File not found : {path}")
     if not check_command(ASDCP_UNWRAP_CMD):
-        raise CommandException("{} not available".format(ASDCP_UNWRAP_CMD))
+        raise CommandException(f"{ASDCP_UNWRAP_CMD} not available")
 
     with temporary_dir() as tmp:
         if prefix:
@@ -241,9 +241,9 @@ def stat_mxf_audio(path, channels, entry_point, duration):
 
     """
     if not os.path.isfile(path):
-        raise ValueError("File not found : {}".format(path))
+        raise ValueError(f"File not found : {path}")
     if not check_command(SOX_CMD):
-        raise ValueError("{} not available".format(SOX_CMD))
+        raise ValueError(f"{SOX_CMD} not available")
 
     args = [
         "-1",  # Split Wave essence to mono WAV files during extract
@@ -257,7 +257,7 @@ def stat_mxf_audio(path, channels, entry_point, duration):
 
     with unwrap_mxf(path, prefix=prefix, args=args) as folder:
         wav_list = [
-            "{}_{:02d}.wav".format(os.path.join(folder, prefix), c)
+            f"{os.path.join(folder, prefix)}_{c:02d}.wav"
             for c in range(1, channels + 1)
         ]
 
@@ -322,9 +322,9 @@ def probe_mediainfo(path):
 
     """
     if not os.path.isfile(path):
-        raise CommandException("File not found : {}".format(path))
+        raise CommandException(f"File not found : {path}")
     if not check_command(MEDIAINFO_CMD):
-        raise CommandException("{} not available".format(MEDIAINFO_CMD))
+        raise CommandException(f"{MEDIAINFO_CMD} not available")
 
     mediainfo_args = [MEDIAINFO_CMD, "--Output=XML", path]
 
@@ -380,7 +380,7 @@ def probe_folder(path):
 
     """
     if not os.path.isdir(path):
-        raise CommandException("Directory not found : {}".format(path))
+        raise CommandException(f"Directory not found : {path}")
 
     metadata = {}
 
