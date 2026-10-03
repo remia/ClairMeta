@@ -8,7 +8,7 @@ from clairmeta.settings import DCP_SETTINGS
 
 class Checker(CheckerBase):
     def __init__(self, dcp):
-        super(Checker, self).__init__(dcp)
+        super().__init__(dcp)
 
     def run_checks(self):
         for source in self.dcp._list_cpl:
@@ -48,16 +48,12 @@ class Checker(CheckerBase):
         cpl_ul, mxf_ul = cpl_ul.lower(), mxf_ul.lower()
         if cpl_ul != mxf_ul:
             self.error(
-                "Incoherent Atmos Data Essence Coding, CPL {} / MXF {}".format(
-                    cpl_ul, mxf_ul
-                ),
+                f"Incoherent Atmos Data Essence Coding, CPL {cpl_ul} / MXF {mxf_ul}",
                 "incoherent",
             )
         elif mxf_ul != ul:
             self.error(
-                "Unknown Atmos Data Essence Coding, expecting {} but got {}".format(
-                    ul, mxf_ul
-                ),
+                f"Unknown Atmos Data Essence Coding, expecting {ul} but got {mxf_ul}",
                 "unknown",
             )
 
@@ -79,9 +75,7 @@ class Checker(CheckerBase):
             self.error("Missing MaxChannelCount field", "missing")
         elif max_cc > max_atmos:
             self.error(
-                "Invalid Atmos MaxChannelCount, got {} but maximum is {}".format(
-                    max_cc, max_atmos
-                ),
+                f"Invalid Atmos MaxChannelCount, got {max_cc} but maximum is {max_atmos}",
                 "invalid",
             )
 
@@ -103,8 +97,6 @@ class Checker(CheckerBase):
             self.error("Missing MaxObjectCount field", "missing")
         elif max_obj > max_atmos:
             self.error(
-                "Invalid Atmos MaxObjectCount, got {} but maximum is {}".format(
-                    max_obj, max_atmos
-                ),
+                f"Invalid Atmos MaxObjectCount, got {max_obj} but maximum is {max_atmos}",
                 "invalid",
             )

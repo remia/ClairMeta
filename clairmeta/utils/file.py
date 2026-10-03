@@ -1,17 +1,15 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-from __future__ import division
-from __future__ import absolute_import
-import os
-import sys
-import contextlib
-import shutil
-import tempfile
 import base64
+import contextlib
 import hashlib
-import time
+import os
 import re
+import shutil
+import sys
+import tempfile
+import time
 
 
 def folder_size(folder):
@@ -52,7 +50,7 @@ def human_size(nbytes):
     """
     for unit in ["", "ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
         if abs(nbytes) < 1024.0:
-            return "{:.2f} {}B".format(nbytes, unit)
+            return f"{nbytes:.2f} {unit}B"
         nbytes /= 1024.0
     return "{:.2f} {}B".format(nbytes, "Yi")
 
@@ -90,7 +88,7 @@ def temporary_dir():
         shutil.rmtree(dirpath)
 
 
-class ConsoleProgress(object):
+class ConsoleProgress:
     def __init__(self):
         """ConsoleProgress constructor."""
         self._total_size = None
@@ -146,15 +144,10 @@ class ConsoleProgress(object):
         else:
             file_size = os.path.getsize(file_path)
 
-            speed_report = "{} in {:.2f} sec (at {:.2f} MBytes/s)".format(
-                human_size(file_size), file_elapsed, (file_size / 1e6) / file_elapsed
-            )
+            speed_report = f"{human_size(file_size)} in {file_elapsed:.2f} sec (at {(file_size / 1e6) / file_elapsed:.2f} MBytes/s)"
 
             sys.stdout.write(
-                "[  {}] 100.00% - {}\r".format(
-                    speed_report.ljust(complete_col_width - 2),
-                    os.path.basename(file_path),
-                )
+                f"[  {speed_report.ljust(complete_col_width - 2)}] 100.00% - {os.path.basename(file_path)}\r"
             )
             sys.stdout.write("\n")
 
@@ -178,7 +171,7 @@ def shaone_b64(file_path, callback=None):
 
     """
     if not os.path.isfile(file_path):
-        raise ValueError("{} file not found".format(file_path))
+        raise ValueError(f"{file_path} file not found")
 
     BUF_SIZE = 65536
     file_size = os.path.getsize(file_path)
@@ -246,7 +239,7 @@ def parse_name(filename, regex=IMAGENO_REGEX):
     """
     m = list(regex.finditer(filename))
     if m == []:
-        raise ValueError("{} : image index not found".format(filename))
+        raise ValueError(f"{filename} : image index not found")
 
     lastm = m[-1]
     name = filename[: lastm.start()]

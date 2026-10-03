@@ -3,14 +3,13 @@
 
 import os
 
-
 LOG_SETTINGS = {
     "level": os.getenv("CLAIRMETA_LOG_LEVEL", "INFO"),
     "enable_console": os.getenv("CLAIRMETA_LOG_CONSOLE", "ON"),
     "enable_file": os.getenv("CLAIRMETA_LOG_FILE", "OFF"),
     "file_name": os.getenv("CLAIRMETA_LOG_FILE_NAME", ""),
-    "file_size": os.getenv("CLAIRMETA_LOG_FILE_SIZE", 1e6),
-    "file_count": os.getenv("CLAIRMETA_LOG_FILE_COUNT", 10),
+    "file_size": int(os.getenv("CLAIRMETA_LOG_FILE_SIZE", "1000000")),
+    "file_count": int(os.getenv("CLAIRMETA_LOG_FILE_COUNT", "10")),
 }
 
 DCP_SETTINGS = {

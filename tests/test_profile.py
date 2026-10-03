@@ -1,11 +1,11 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import unittest
 import os
+import unittest
 
+from clairmeta.profile import get_default_profile, load_profile, save_profile
 from clairmeta.utils.file import temporary_file
-from clairmeta.profile import load_profile, save_profile, get_default_profile
 
 
 class ProfileTest(unittest.TestCase):

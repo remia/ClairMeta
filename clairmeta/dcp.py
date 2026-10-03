@@ -4,35 +4,35 @@
 import os
 import time
 
-from clairmeta.logger import get_log
-from clairmeta.dcp_utils import list_cpl_assets
+from clairmeta.dcp_check import CheckerBase
 from clairmeta.dcp_parse import (
     assetmap_parse,
-    volindex_parse,
-    pkl_parse,
     cpl_parse,
     kdm_parse,
+    pkl_parse,
+    volindex_parse,
 )
 from clairmeta.dcp_utils import (
-    list_am_assets,
-    list_pkl_assets,
     cpl_extract_characteristics,
     cpl_probe_asset,
     kdm_extract_key_info,
+    list_am_assets,
+    list_cpl_assets,
+    list_pkl_assets,
 )
-from clairmeta.dcp_check import CheckerBase
-from clairmeta.utils.xml import parse_xml
-from clairmeta.utils.sys import remove_key_dict
-from clairmeta.utils.file import folder_size, human_size
-from clairmeta.utils.crypto import decrypt_b64
-from clairmeta.utils.isdcf import parse_isdcf_string
-from clairmeta.settings import DCP_SETTINGS
+from clairmeta.exception import ClairMetaException
+from clairmeta.logger import get_log
 from clairmeta.profile import DCP_CHECK_PROFILE
 from clairmeta.report import CheckReport
-from clairmeta.exception import ClairMetaException
+from clairmeta.settings import DCP_SETTINGS
+from clairmeta.utils.crypto import decrypt_b64
+from clairmeta.utils.file import folder_size, human_size
+from clairmeta.utils.isdcf import parse_isdcf_string
+from clairmeta.utils.sys import remove_key_dict
+from clairmeta.utils.xml import parse_xml
 
 
-class DCP(object):
+class DCP:
     """Digital Cinema Package abstraction."""
 
     def __init__(self, path, kdm=None, pkey=None):
@@ -50,7 +50,7 @@ class DCP(object):
         """
 
         if not os.path.isdir(path):
-            raise ClairMetaException("{} is not a valid folder".format(path))
+            raise ClairMetaException(f"{path} is not a valid folder")
 
         self.path = os.path.normpath(path)
         self.kdm = os.path.normpath(kdm) if kdm else None
@@ -158,7 +158,7 @@ class DCP(object):
             return
 
         for kdm in self._list_kdm:
-            for _, key in kdm["Info"]["KDM"]["Keys"].items():
+            for key in kdm["Info"]["KDM"]["Keys"].values():
                 plain = decrypt_b64(key["Cipher"], self.pkey)
                 key.update(kdm_extract_key_info(plain))
 
@@ -277,7 +277,7 @@ class DCP(object):
             return self.metadata
 
         start = time.time()
-        self.log.info("Probing DCP : {}".format(self.path))
+        self.log.info(f"Probing DCP : {self.path}")
 
         # Find and parse package components
         if not self._parsed:
@@ -299,7 +299,7 @@ class DCP(object):
             self._probeb = True
 
         seconds_elapsed = time.time() - start
-        self.log.info("Total time : {:.2f} seconds".format(seconds_elapsed))
+        self.log.info(f"Total time : {seconds_elapsed:.2f} seconds")
 
         return self.metadata
 

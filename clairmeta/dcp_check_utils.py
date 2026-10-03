@@ -3,12 +3,14 @@
 
 import re
 from datetime import datetime
+
 from dateutil import parser
+from lxml import etree
 
 from clairmeta.logger import get_log
+from clairmeta.settings import DCP_SETTINGS
 from clairmeta.utils.uuid import check_uuid
 from clairmeta.utils.xml import validate_xml
-from clairmeta.settings import DCP_SETTINGS
 
 
 def get_schema(name):
@@ -26,7 +28,6 @@ def check_xml_constraints(checker, xml_path):
         SMPTE ST 429-17:2017
         W3C Extensible Markup Language v (1.0)
     """
-    # ruff: noqa: E501
     # fmt: off
 
     # Follow the XML spec precicely for the definition of XMLDecl, except for:
@@ -49,8 +50,8 @@ def check_xml_constraints(checker, xml_path):
         with open(xml_path, encoding="utf-8-sig") as file:
             xml_file = file.read()
             newlines = file.newlines
-    except IOError as e:
-        get_log().error("Error opening XML file {} : {}".format(xml_path, str(e)))
+    except OSError as e:
+        get_log().error(f"Error opening XML file {xml_path} : {e!s}")
         return
 
     if re.match("\ufeff", xml_file):
@@ -65,7 +66,7 @@ def check_xml_constraints(checker, xml_path):
     # Some files might not have newlines at all (single line)
     if newlines not in ["\n", "\r\n", None]:
         checker.error(
-            "XML file has invalid ending: {}".format(repr(file.newlines)),
+            f"XML file has invalid ending: {file.newlines!r}",
             "constraints_line_ending",
         )
 
@@ -77,12 +78,12 @@ def check_xml(checker, xml_path, xml_ns, schema_type, schema_dcp):
     # Correct namespace
     schema_id = get_schema(xml_ns)
     if not schema_id:
-        checker.error("Namespace unknown : {}".format(xml_ns), "namespace")
+        checker.error(f"Namespace unknown : {xml_ns}", "namespace")
 
     # Coherence with package schema
     if schema_type != schema_dcp:
-        message = "Schema is not valid got {} but was expecting {}".format(
-            schema_type, schema_dcp
+        message = (
+            f"Schema is not valid got {schema_type} but was expecting {schema_dcp}"
         )
         checker.error(message, "schema_coherence")
 
@@ -90,11 +91,9 @@ def check_xml(checker, xml_path, xml_ns, schema_type, schema_dcp):
     try:
         validate_xml(xml_path, schema_id)
     except LookupError:
-        get_log().info("Schema validation skipped : {}".format(xml_path))
-    except Exception as e:
-        message = "Schema validation error : {}\n" "Using schema : {}".format(
-            str(e), schema_id
-        )
+        get_log().info(f"Schema validation skipped : {xml_path}")
+    except (OSError, ValueError, etree.LxmlError) as e:
+        message = f"Schema validation error : {e!s}\n" f"Using schema : {schema_id}"
         checker.error(message, "schema_validation")
 
 
@@ -105,7 +104,7 @@ def check_issuedate(checker, date):
     now_date = datetime.now().astimezone(tz=None)
 
     if parse_date > now_date:
-        checker.error("IssueDate is post dated : {}".format(parse_date))
+        checker.error(f"IssueDate is post dated : {parse_date}")
 
 
 def compare_uuid(checker, uuid_to_check, uuid_reference):
@@ -113,8 +112,6 @@ def compare_uuid(checker, uuid_to_check, uuid_reference):
     name_ref, uuid_ref = uuid_reference
 
     if not check_uuid(uuid):
-        checker.error("Invalid {} uuid found : {}".format(name, uuid))
+        checker.error(f"Invalid {name} uuid found : {uuid}")
     if uuid.lower() != uuid_ref.lower():
-        checker.error(
-            "Uuid {} ({}) not equal to {} ({})".format(name, uuid, name_ref, uuid_ref)
-        )
+        checker.error(f"Uuid {name} ({uuid}) not equal to {name_ref} ({uuid_ref})")

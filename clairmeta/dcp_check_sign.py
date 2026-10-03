@@ -4,16 +4,21 @@
 import base64
 import hashlib
 from datetime import datetime, timedelta, timezone
-from dateutil import parser
+
 from cryptography import x509
+from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
+from dateutil import parser
 
-from clairmeta.settings import DCP_SETTINGS
-from clairmeta.utils.xml import canonicalize_xml
-from clairmeta.utils.sys import all_keys_in_dict
 from clairmeta.dcp_check import CheckerBase
+from clairmeta.settings import DCP_SETTINGS
+from clairmeta.utils.sys import all_keys_in_dict
+from clairmeta.utils.xml import canonicalize_xml
+
+# Exceptions raised by cryptography when a signature can't be verified
+SIGNATURE_ERRORS = (InvalidSignature, UnsupportedAlgorithm, TypeError, ValueError)
 
 
 class Checker(CheckerBase):
@@ -24,7 +29,7 @@ class Checker(CheckerBase):
     """
 
     def __init__(self, dcp):
-        super(Checker, self).__init__(dcp)
+        super().__init__(dcp)
 
         self.init_context()
 
@@ -75,11 +80,9 @@ class Checker(CheckerBase):
         try:
             certif_bytes = base64.b64decode(cert["X509Certificate"])
             certif = x509.load_der_x509_certificate(certif_bytes)
-        except Exception as e:
+        except (KeyError, ValueError) as e:
             self.fatal_error(
-                "Invalid certificate encoding : {}\nDigital Signature checks will be skipped for this asset.".format(
-                    str(e)
-                ),
+                f"Invalid certificate encoding : {e!s}\nDigital Signature checks will be skipped for this asset.",
                 "decoding",
             )
 
@@ -88,9 +91,7 @@ class Checker(CheckerBase):
             return certif
         except ValueError as e:
             self.fatal_error(
-                "Error parsing certificate extensions : {}\nDigital Signature checks will be skipped for this asset.".format(
-                    str(e)
-                ),
+                f"Error parsing certificate extensions : {e!s}\nDigital Signature checks will be skipped for this asset.",
                 "extensions",
                 "Encountered non-conformant extensions encoding.\n"
                 "  Has been observed on certificate's BasicConstraints extension, see https://github.com/pyca/cryptography/issues/3856",
@@ -131,7 +132,7 @@ class Checker(CheckerBase):
 
                 self.cert_list.append(cert_x509)
 
-                stack = asset_stack + ["Certificate {}".format(cert_x509.serial_number)]
+                stack = asset_stack + [f"Certificate {cert_x509.serial_number}"]
 
                 [
                     self.run_check(check, cert_x509, index, stack=stack)
@@ -184,15 +185,13 @@ class Checker(CheckerBase):
             try:
                 cert.extensions.get_extension_for_oid(oid)
             except x509.ExtensionNotFound:
-                self.error("Missing required extension marked : {}".format(name))
+                self.error(f"Missing required extension marked : {name}")
 
         # 3.b Unknown extensions marked critical
         for ext in cert.extensions:
             is_known = ext.oid in required_extensions
             if not is_known and ext.critical:
-                self.error(
-                    "Unknown extension marked as critical : " "{}".format(ext._name)
-                )
+                self.error("Unknown extension marked as critical : " f"{ext._name}")
 
     def check_certif_fields(self, cert, index):
         """Certificate mandatory fields check.
@@ -226,8 +225,8 @@ class Checker(CheckerBase):
                 if a._type != x509.name._ASN1Type.PrintableString:
                     type_str = str(a._type).split(".")[-1]
                     self.error(
-                        "{} {} field encoding should be PrintableString"
-                        ", got {}".format(name, a.oid._name, type_str)
+                        f"{name} {a.oid._name} field encoding should be PrintableString"
+                        f", got {type_str}"
                     )
 
     def check_certif_basic_constraint(self, cert, index):
@@ -340,15 +339,11 @@ class Checker(CheckerBase):
 
         if is_leaf and self.dcp.schema == "SMPTE":
             if not roles:
-                self.error("Missing role in CommonName ({})".format(cn))
+                self.error(f"Missing role in CommonName ({cn})")
             if self.context_role not in roles:
-                self.error(
-                    "Expecting {} role in CommonName ({})".format(self.context_role, cn)
-                )
+                self.error(f"Expecting {self.context_role} role in CommonName ({cn})")
         if is_ca and roles:
-            self.error(
-                "Role(s) found in authority certificate CommonName ({})".format(cn)
-            )
+            self.error(f"Role(s) found in authority certificate CommonName ({cn})")
 
     def check_certif_multi_role(self, cert, index):
         """Leaf certificate role check.
@@ -365,9 +360,8 @@ class Checker(CheckerBase):
         is_ca = index > 0
         is_leaf = not is_ca
 
-        if is_leaf and self.dcp.schema == "SMPTE":
-            if roles and len(roles) > 1:
-                self.error("Superfluous roles found in CommonName ({})".format(cn))
+        if is_leaf and self.dcp.schema == "SMPTE" and roles and len(roles) > 1:
+            self.error(f"Superfluous roles found in CommonName ({cn})")
 
     def check_certif_date(self, cert, index):
         """Certificate date validation.
@@ -385,8 +379,9 @@ class Checker(CheckerBase):
         if self.context_time == "NOW":
             validity_time = datetime.now(timezone.utc)
         elif self.context_time != "":
-            validity_time = datetime.strptime(self.context_time, self.time_format)
-            validity_time = validity_time.replace(tzinfo=timezone.utc)
+            validity_time = datetime.strptime(
+                self.context_time, self.time_format
+            ).replace(tzinfo=timezone.utc)
 
         if self.context_time:
             not_before = cert.not_valid_before_utc
@@ -394,9 +389,7 @@ class Checker(CheckerBase):
 
             if validity_time < not_before or validity_time > not_after:
                 self.error(
-                    "IssueDate ({}) outside certificate validity (from {} to {})".format(
-                        validity_time, not_before, not_after
-                    )
+                    f"IssueDate ({validity_time}) outside certificate validity (from {not_before} to {not_after})"
                 )
 
     def check_certif_date_expired(self, cert, index):
@@ -416,10 +409,8 @@ class Checker(CheckerBase):
 
         if validity_time < not_before or validity_time > not_after:
             self.error(
-                "Certificate validity expired (from {} to {}).\n"
-                "Playback may fail on non DCI 1.4.4 compliant systems.".format(
-                    not_before, not_after
-                )
+                f"Certificate validity expired (from {not_before} to {not_after}).\n"
+                "Playback may fail on non DCI 1.4.4 compliant systems."
             )
 
     def check_certif_date_overflow(self, cert, index):
@@ -437,12 +428,10 @@ class Checker(CheckerBase):
         if not_after >= int32_overflow:
             self.error(
                 "Certificate validity extends past unix timestamp"
-                " int32 overflow ({})".format(not_after)
+                f" int32 overflow ({not_after})"
             )
         elif not_after >= ten_years_past:
-            self.error(
-                "Certificate validity extends past 10 years ({})".format(not_after)
-            )
+            self.error(f"Certificate validity extends past 10 years ({not_after})")
 
     def check_certif_signature_algorithm(self, cert, index):
         """Certificate signature algorithm check.
@@ -456,9 +445,7 @@ class Checker(CheckerBase):
 
         if signature_algorithm not in expected:
             self.error(
-                "Invalid Signature Algorithm, expected {} but got {}".format(
-                    expected, signature_algorithm
-                )
+                f"Invalid Signature Algorithm, expected {expected} but got {signature_algorithm}"
             )
 
     def check_certif_rsa_validity(self, cert, index):
@@ -480,14 +467,12 @@ class Checker(CheckerBase):
             self.error("Subject's public key shall be an RSA key")
         if key_size != expected_size:
             self.error(
-                "Subject's public key invalid size, expected {} but got {}".format(
-                    expected_size, key_size
-                )
+                f"Subject's public key invalid size, expected {expected_size} but got {key_size}"
             )
         if key_exp != expected_exp:
             self.error(
                 "Subject's public key invalid public exponent,"
-                " expected {} but got {}".format(expected_exp, key_exp)
+                f" expected {expected_exp} but got {key_exp}"
             )
 
     def check_certif_revokation_list(self, cert, index):
@@ -522,9 +507,7 @@ class Checker(CheckerBase):
             self.error("dnQualifier must be present")
         if dn_thumbprint != key_thumbprint:
             self.error(
-                "dnQualifier mismatch, expected {} but got {}".format(
-                    key_thumbprint, dn_thumbprint
-                )
+                f"dnQualifier mismatch, expected {key_thumbprint} but got {dn_thumbprint}"
             )
 
     def check_certif_signature(self, cert, index):
@@ -566,8 +549,8 @@ class Checker(CheckerBase):
                 )
             else:
                 cert.verify_directly_issued_by(issuer_cert)
-        except Exception as e:
-            self.error("Certificate signature check failure : {}".format(str(e)))
+        except SIGNATURE_ERRORS as e:
+            self.error(f"Certificate signature check failure : {e!s}")
 
     def check_xml_certif_serial_coherence(self, cert, xml_cert):
         """XML / Certificate serial number coherence.
@@ -578,9 +561,7 @@ class Checker(CheckerBase):
         xml_serial = xml_cert["X509IssuerSerial"]["X509SerialNumber"]
         if xml_serial != cert.serial_number:
             self.error(
-                "Serial number mismatch, expected {} but got {}".format(
-                    cert.serial_number, xml_serial
-                )
+                f"Serial number mismatch, expected {cert.serial_number} but got {xml_serial}"
             )
 
     def check_xml_certif_issuer_coherence(self, cert, xml_cert):
@@ -593,9 +574,7 @@ class Checker(CheckerBase):
         issuer_str = cert.issuer.rfc4514_string({x509.OID_DN_QUALIFIER: "dnQualifier"})
         if xml_issuer != issuer_str:
             self.error(
-                "IssuerName mismatch, expected {} but got {}".format(
-                    issuer_str, xml_issuer
-                )
+                f"IssuerName mismatch, expected {issuer_str} but got {xml_issuer}"
             )
 
     def check_sign_chain_length(self, source):
@@ -610,8 +589,8 @@ class Checker(CheckerBase):
             and len(self.cert_chains) < self.context_chain_length
         ):
             self.error(
-                "Certificate chain length should be at least {} long,"
-                " got {}".format(self.context_chain_length, len(self.cert_chains))
+                f"Certificate chain length should be at least {self.context_chain_length} long,"
+                f" got {len(self.cert_chains)}"
             )
 
     def check_sign_chain_coherence(self, source):
@@ -656,7 +635,7 @@ class Checker(CheckerBase):
 
         References: N/A
         """
-        sign_alg_set = set([c.signature_hash_algorithm.name for c in self.cert_list])
+        sign_alg_set = {c.signature_hash_algorithm.name for c in self.cert_list}
         if len(sign_alg_set) > 1:
             self.error(
                 "Certificate chain contains certificates "
@@ -679,9 +658,7 @@ class Checker(CheckerBase):
         sig = signed_info["SignatureMethod@Algorithm"]
         if self.sig_ns_map[self.dcp.schema] != sig:
             self.error(
-                "Invalid Signature Algorithm, expected {} but got {}".format(
-                    self.sig_ns_map[self.dcp.schema], sig
-                )
+                f"Invalid Signature Algorithm, expected {self.sig_ns_map[self.dcp.schema]} but got {sig}"
             )
 
     def check_sign_canonicalization_algorithm(self, source):
@@ -782,5 +759,5 @@ class Checker(CheckerBase):
                 padding=PKCS1v15(),
                 algorithm=self.sig_algorithm_map[self.dcp.schema],
             )
-        except Exception:
+        except SIGNATURE_ERRORS:
             self.error("Signature validation failed")

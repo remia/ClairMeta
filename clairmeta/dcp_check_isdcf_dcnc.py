@@ -1,17 +1,17 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-from datetime import datetime
+from datetime import datetime, timezone
 
-from clairmeta.dcp_utils import list_cpl_assets
-from clairmeta.utils.isdcf import parse_isdcf_string
 from clairmeta.dcp_check import CheckerBase
+from clairmeta.dcp_utils import list_cpl_assets
 from clairmeta.settings import DCP_SETTINGS
+from clairmeta.utils.isdcf import parse_isdcf_string
 
 
 class Checker(CheckerBase):
     def __init__(self, dcp):
-        super(Checker, self).__init__(dcp)
+        super().__init__(dcp)
         self.fields = None
 
     def run_checks(self):
@@ -65,14 +65,16 @@ class Checker(CheckerBase):
         date_str = fields["Date"].get("Value")
         if date_str:
             try:
-                date = datetime.strptime(date_str, "%Y%m%d")
+                date = datetime.strptime(date_str, "%Y%m%d").replace(
+                    tzinfo=timezone.utc
+                )
             except ValueError:
                 self.fatal_error(
-                    "Date can't be parsed, expecting YYYYMMDD : {}".format(date_str),
+                    f"Date can't be parsed, expecting YYYYMMDD : {date_str}",
                     "format",
                 )
 
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             if date > now:
                 self.error("Date suggest a composition from the future", "future")
 
@@ -93,9 +95,7 @@ class Checker(CheckerBase):
         cpl_rate = str(cpl_node["EditRate"])
         if content_rate and cpl_rate != "Mixed" and content_rate != cpl_rate:
             self.error(
-                "ContentTitle / CPL Framerate mismatch : {} / {}".format(
-                    content_rate, cpl_rate
-                )
+                f"ContentTitle / CPL Framerate mismatch : {content_rate} / {cpl_rate}"
             )
 
     def check_dcnc_field_claim_dimension(self, playlist, fields):
@@ -143,9 +143,7 @@ class Checker(CheckerBase):
             msg_map = {True: "Subtitle", False: "No Subtitle"}
 
             self.error(
-                "ContentTitle suggest {} but CPL contains {}".format(
-                    msg_map[hasSub], msg_map[cplHasSub]
-                )
+                f"ContentTitle suggest {msg_map[hasSub]} but CPL contains {msg_map[cplHasSub]}"
             )
 
     def check_dcnc_field_claim_caption(self, playlist, fields):
@@ -185,8 +183,8 @@ class Checker(CheckerBase):
 
             if cpl_cc and asset_cc < cpl_cc:
                 self.error(
-                    "ContentTitle claims {} audio but CPL contains only "
-                    " {} channels".format(audio_format, asset_cc)
+                    f"ContentTitle claims {audio_format} audio but CPL contains only "
+                    f" {asset_cc} channels"
                 )
 
     def check_dcnc_field_claim_immersive_sound(self, playlist, fields):
@@ -196,8 +194,8 @@ class Checker(CheckerBase):
 
         if immersive and not auxdatas:
             self.error(
-                "ContentTitle claims immersive audio ({}) "
-                "but CPL have no Auxiliary tracks".format(immersive)
+                f"ContentTitle claims immersive audio ({immersive}) "
+                "but CPL have no Auxiliary tracks"
             )
 
         if immersive and auxdatas:
@@ -209,8 +207,8 @@ class Checker(CheckerBase):
 
             if not assets:
                 self.error(
-                    "ContentTitle claims immersive audio ({})"
-                    " but CPL is not".format(immersive)
+                    f"ContentTitle claims immersive audio ({immersive})"
+                    " but CPL is not"
                 )
 
     def check_dcnc_field_claim_resolution(self, playlist, fields):
@@ -221,21 +219,18 @@ class Checker(CheckerBase):
         mxf_res = playlist["Info"]["CompositionPlaylist"]["Resolution"]
         detect_res = mxf_res != "Unknown" and mxf_res != "Mixed"
 
-        if resolution and detect_res:
-            if mxf_res not in resolution_map[resolution]:
-                self.error(
-                    "ContentTitle claims {} but CPL Picture track resolution "
-                    "is {}".format(resolution, mxf_res)
-                )
+        if resolution and detect_res and mxf_res not in resolution_map[resolution]:
+            self.error(
+                f"ContentTitle claims {resolution} but CPL Picture track resolution "
+                f"is {mxf_res}"
+            )
 
     def check_dcnc_field_claim_standard(self, playlist, fields):
         """DCP Standard coherence check."""
         standard = fields["Standard"].get("Schema")
         if standard and standard != self.dcp.schema:
             self.error(
-                "ContentTitle claims {} but DCP schema is {}".format(
-                    standard, self.dcp.schema
-                )
+                f"ContentTitle claims {standard} but DCP schema is {self.dcp.schema}"
             )
 
     def check_dcnc_field_claim_dolbyvision(self, playlist, fields):

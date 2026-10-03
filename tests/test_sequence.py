@@ -1,8 +1,8 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import unittest
 import os
+import unittest
 
 from clairmeta import Sequence
 from clairmeta.logger import disable_log
@@ -11,7 +11,7 @@ from clairmeta.settings import SEQUENCE_SETTINGS
 
 class SequenceTestBase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(SequenceTestBase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         disable_log()
 
     def get_path(self, name):

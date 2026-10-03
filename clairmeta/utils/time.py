@@ -69,7 +69,7 @@ def frame_to_tc(edit_count, edit_rate):
         s, f = divmod(edit_count, edit_rate)
         m, s = divmod(s, 60)
         h, m = divmod(m, 60)
-        return "%02d:%02d:%02d:%02d" % (h, m, s, f)
+        return ":".join(f"{int(v):02d}" for v in (h, m, s, f))
     else:
         return "00:00:00:00"
 

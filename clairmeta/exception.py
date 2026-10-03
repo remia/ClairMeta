@@ -5,20 +5,16 @@
 class ClairMetaException(Exception):
     """Base class for all exception raised by this library."""
 
-    pass
-
 
 class CommandException(ClairMetaException):
     """Raised when external command fails."""
-
-    pass
 
 
 class ProbeException(ClairMetaException):
     """Raised when probing a DCP fails."""
 
     def __init__(self, msg):
-        super(ProbeException, self).__init__(str(msg))
+        super().__init__(str(msg))
 
 
 class CheckException(ClairMetaException):
@@ -28,5 +24,3 @@ class CheckException(ClairMetaException):
     ``error()`` and ``fatal_error()`` methods.
 
     """
-
-    pass

@@ -1,18 +1,16 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-from __future__ import absolute_import
-import os
 import io
+import os
 import re
+from xml.dom.minidom import parseString
+
 import xmltodict
 from lxml import etree
-from xml.dom.minidom import parseString
-from xml.parsers.expat import ExpatError
 
-from clairmeta.utils.sys import modified_dict, try_convert_number
 from clairmeta.logger import get_log
-
+from clairmeta.utils.sys import modified_dict, try_convert_number
 
 _DEFAULT_NS_SEP = " "
 
@@ -107,7 +105,7 @@ def post_parse_node(path, key, value, ns_sep=_DEFAULT_NS_SEP):
     return key, value
 
 
-def post_parse_attr(in_elem, parent_dict={}, parent_key=""):
+def post_parse_attr(in_elem, parent_dict=None, parent_key=""):
     """Convert / format attributes in Xmltodict output and returns a new dict.
 
     Recursively parse input dictionary to format attributes differently
@@ -143,7 +141,7 @@ def post_parse_attr(in_elem, parent_dict={}, parent_key=""):
     if isinstance(in_elem, dict):
         for k, v in in_elem.items():
             if k.startswith("@"):
-                attrib_key = "{}@{}".format(parent_key, k[1:])
+                attrib_key = f"{parent_key}@{k[1:]}"
                 parent_dict[attrib_key] = v
             else:
                 out_elem[k] = post_parse_attr(v, out_elem, k)
@@ -163,7 +161,7 @@ def post_parse_attr(in_elem, parent_dict={}, parent_key=""):
     return out_elem
 
 
-def parse_xml(xml_path, namespaces={}, force_list=(), xml_attribs=True):
+def parse_xml(xml_path, namespaces=None, force_list=(), xml_attribs=True):
     """Parse a XML document and returns a dict with proper formating.
 
     Args:
@@ -186,14 +184,14 @@ def parse_xml(xml_path, namespaces={}, force_list=(), xml_attribs=True):
 
     """
     if not os.path.isfile(xml_path):
-        raise ValueError("{} is not a file".format(xml_path))
+        raise ValueError(f"{xml_path} is not a file")
 
     try:
         with open(xml_path, encoding="utf-8-sig") as file:
             readed_file = file.read()
 
             # Collapse these namespace
-            namespaces = {v: k for k, v in namespaces.items()}
+            namespaces = {v: k for k, v in (namespaces or {}).items()}
 
             xml_dict = xmltodict.parse(
                 readed_file,
@@ -211,8 +209,8 @@ def parse_xml(xml_path, namespaces={}, force_list=(), xml_attribs=True):
 
             return xml_dict
 
-    except (Exception, ExpatError) as e:
-        get_log().error("Error parsing XML {} : {}".format(xml_path, str(e)))
+    except Exception as e:  # noqa: BLE001 - malformed XML is logged, not raised
+        get_log().error(f"Error parsing XML {xml_path} : {e!s}")
 
 
 def validate_xml(xml_path, xsd_id):
@@ -228,7 +226,7 @@ def validate_xml(xml_path, xsd_id):
 
     """
     if not os.path.isfile(xml_path):
-        raise ValueError("{} is not a file".format(xml_path))
+        raise ValueError(f"{xml_path} is not a file")
 
     root_path = os.path.dirname(os.path.dirname(__file__))
     catalog_path = os.path.join(root_path, "xsd/catalog.xml")
@@ -236,9 +234,7 @@ def validate_xml(xml_path, xsd_id):
     # Find schema location using catalog
     catalog = etree.parse(catalog_path).getroot()
     nsmap = {"ns": catalog.nsmap[None]}
-    match = catalog.findall(
-        ".//ns:public[@publicId='{}']".format(xsd_id), namespaces=nsmap
-    )
+    match = catalog.findall(f".//ns:public[@publicId='{xsd_id}']", namespaces=nsmap)
 
     if not match:
         raise LookupError("XSD schema not found")
@@ -276,13 +272,13 @@ def canonicalize_xml(xml_path, root=None, ns=None, strip=None):
 
     """
     if not os.path.isfile(xml_path):
-        raise ValueError("{} is not a file".format(xml_path))
+        raise ValueError(f"{xml_path} is not a file")
 
     doc = etree.parse(xml_path)
     nsmap = {"ns": ns}
 
     if root:
-        new_root = doc.getroot().find(".//ns:{}".format(root), namespaces=nsmap)
+        new_root = doc.getroot().find(f".//ns:{root}", namespaces=nsmap)
         if new_root is None:
             raise LookupError("Canonicalization fail, missing root node")
 

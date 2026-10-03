@@ -3,15 +3,15 @@
 
 import os
 
-from clairmeta.utils.file import shaone_b64
 from clairmeta.dcp_check import CheckerBase
-from clairmeta.dcp_check_utils import check_xml, check_issuedate
+from clairmeta.dcp_check_utils import check_issuedate, check_xml
 from clairmeta.dcp_utils import list_pkl_assets
+from clairmeta.utils.file import shaone_b64
 
 
 class Checker(CheckerBase):
     def __init__(self, dcp):
-        super(Checker, self).__init__(dcp)
+        super().__init__(dcp)
 
     def run_checks(self):
         # Accumulate hash by UUID, useful for multi PKL package
@@ -86,7 +86,7 @@ class Checker(CheckerBase):
         """
         uuid, _, _ = asset
         # Note : dcp._list_asset is directly extracted from Assetmap
-        if uuid not in self.dcp._list_asset.keys():
+        if uuid not in self.dcp._list_asset:
             self.error("Not present in Assetmap")
 
     def check_assets_pkl_size(self, pkl, asset):
@@ -103,9 +103,7 @@ class Checker(CheckerBase):
         actual_size = os.path.getsize(path)
 
         if actual_size != asset_size:
-            self.error(
-                "Invalid size, expected {} but got {}".format(asset_size, actual_size)
-            )
+            self.error(f"Invalid size, expected {asset_size} but got {actual_size}")
 
     def check_assets_pkl_hash(self, pkl, asset):
         """PKL assets hash check.
@@ -125,7 +123,5 @@ class Checker(CheckerBase):
 
         if self.hash_map[asset_id] != asset_hash:
             self.error(
-                "Corrupt file, expected hash {} but got {}".format(
-                    asset_hash, self.hash_map[asset_id]
-                )
+                f"Corrupt file, expected hash {asset_hash} but got {self.hash_map[asset_id]}"
             )
