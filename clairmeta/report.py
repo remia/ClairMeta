@@ -1,17 +1,20 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
+from __future__ import annotations
+
 import re
 from collections import defaultdict
 from datetime import datetime
+from typing import ClassVar
 
 from clairmeta.utils.file import human_size
 
 
-class CheckReport(object):
+class CheckReport:
     """Check report listing all checks executions."""
 
-    ORDERED_STATUS = [
+    ORDERED_STATUS: ClassVar[list[str]] = [
         "ERROR",
         "WARNING",
         "INFO",
@@ -19,7 +22,7 @@ class CheckReport(object):
         "BYPASS",
     ]
 
-    PRETTY_STATUS = {
+    PRETTY_STATUS: ClassVar[dict[str, str]] = {
         "ERROR": "Error(s)",
         "WARNING": "Warning(s)",
         "INFO": "Info(s)",
@@ -38,14 +41,14 @@ class CheckReport(object):
         self.dcp = dcp
         self.checks = dcp.checks
         self.profile = profile
-        self.date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        self.date = datetime.now().astimezone().strftime("%d/%m/%Y %H:%M:%S")
         self.duration = sum([c.seconds_elapsed for c in self.checks])
 
         self._detect_check_criticality()
 
     def checks_count(self):
         """Return the number of different checks executed."""
-        check_unique = set([c.name for c in self.checks if not c.bypass])
+        check_unique = {c.name for c in self.checks if not c.bypass}
         return len(check_unique)
 
     def checks_failed(self):
@@ -80,16 +83,16 @@ class CheckReport(object):
 
     def is_valid(self):
         """Returns validity of checked DCP."""
-        return all([c.is_valid() for c in self.checks])
+        return all(c.is_valid() for c in self.checks)
 
     def pretty_str(self):
         """Format the report in a human friendly way."""
         report = ""
         report += "Status : {}\n".format("Success" if self.is_valid() else "Fail")
-        report += "Path : {}\n".format(self.dcp.path)
-        report += "Size : {}\n".format(human_size(self.dcp.size))
-        report += "Total check : {}\n".format(self.checks_count())
-        report += "Total time : {:.2f} sec\n".format(self.duration)
+        report += f"Path : {self.dcp.path}\n"
+        report += f"Size : {human_size(self.dcp.size)}\n"
+        report += f"Total check : {self.checks_count()}\n"
+        report += f"Total time : {self.duration:.2f} sec\n"
         report += "\n"
 
         def nested_dict():
@@ -99,7 +102,7 @@ class CheckReport(object):
 
         # Accumulate all failed check and stack them by asset
         for check in self.checks_failed():
-            lines = [". {}".format(check.short_desc())]
+            lines = [f". {check.short_desc()}"]
 
             for error in check.errors:
                 asset = status_map[str(error.criticality)]
@@ -108,8 +111,8 @@ class CheckReport(object):
                     asset = asset[filename]
 
                 desc = error.doc
-                desc = ". {}\n".format(desc) if desc else ""
-                lines.append("{}{}".format(desc, error.message))
+                desc = f". {desc}\n" if desc else ""
+                lines.append(f"{desc}{error.message}")
 
             asset["msg"] = asset.get("msg", []) + ["\n".join(lines)]
 
@@ -125,9 +128,7 @@ class CheckReport(object):
                     self.PRETTY_STATUS[status] + ":", "\n".join(out_stack)
                 )
 
-        bypassed = "\n".join(
-            set(["  . " + c.short_desc() for c in self.checks_bypassed()])
-        )
+        bypassed = "\n".join({"  . " + c.short_desc() for c in self.checks_bypassed()})
         if bypassed:
             report += "{}\n{}\n".format(self.PRETTY_STATUS["BYPASS"] + ":", bypassed)
 

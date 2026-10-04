@@ -1,8 +1,8 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import os
 import logging
+import os
 from logging.handlers import RotatingFileHandler
 
 from clairmeta.settings import LOG_SETTINGS
@@ -56,8 +56,8 @@ def init_file(log, formatter):
         )
         file_handler.setFormatter(formatter)
         log.addHandler(file_handler)
-    except Exception as e:
-        log.error("Could not intialize log file : {}".format(str(e)))
+    except OSError as e:
+        log.error(f"Could not intialize log file : {e!s}")
 
 
 def enable_log():

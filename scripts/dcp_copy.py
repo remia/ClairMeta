@@ -7,9 +7,9 @@ Require python 3.2 for concurrent.futures.ThreadPoolExecutor.
 
 import argparse
 import concurrent.futures
-import time
 import shutil
 import sys
+import time
 
 import clairmeta
 from clairmeta import DCP
@@ -23,7 +23,7 @@ def cli_copy(args):
 
     try:
         log = get_log()
-        log.info("Copy {} to {}".format(args.source, args.dest))
+        log.info(f"Copy {args.source} to {args.dest}")
 
         start = time.time()
         progress = ConsoleProgress()
@@ -43,21 +43,21 @@ def cli_copy(args):
             future.result()
 
         progress(args.source, dcp_size, dcp_size, elapsed)
-        log.info("Total time : {:.2f} sec".format(time.time() - start))
+        log.info(f"Total time : {time.time() - start:.2f} sec")
 
         DCP(args.dest)
         status, _ = dcp.check(hash_callback=ConsoleProgress())
 
         return status
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - report any failure and exit
         print(str(e))
         return False
 
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Clairmeta Copy Sample Utility {}".format(clairmeta.__version__)
+        description=f"Clairmeta Copy Sample Utility {clairmeta.__version__}"
     )
 
     parser.add_argument("source", help="absolute source package path")

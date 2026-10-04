@@ -1,9 +1,8 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import unittest
 import os
-
+import unittest
 
 template_lines = [
     "# Clairmeta - (C) YMAGIS S.A.\n",
@@ -19,7 +18,7 @@ class LicenseTest(unittest.TestCase):
         with open(path, "r") as fhandle:
             lines = fhandle.readlines()
             lines = [ln for ln in lines if ln != "" and not ln.startswith("#!")]
-            return all([a == b for a, b in zip(template_lines, lines)])
+            return all(a == b for a, b in zip(template_lines, lines))
 
     def test_sources_have_license(self):
         for dirpath, dirnames, filenames in os.walk(source_folder):
@@ -28,7 +27,7 @@ class LicenseTest(unittest.TestCase):
                     fpath = os.path.join(dirpath, f)
                     self.assertTrue(
                         self.file_contain_license(fpath),
-                        msg="Missing license for file {}".format(f),
+                        msg=f"Missing license for file {f}",
                     )
 
 

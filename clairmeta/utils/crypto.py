@@ -1,10 +1,11 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import os
 import base64
+import os
+
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
 
@@ -23,7 +24,7 @@ def decrypt_b64(cipher, key):
 
     """
     if not os.path.isfile(key):
-        raise ValueError("{} file not found".format(key))
+        raise ValueError(f"{key} file not found")
 
     with open(key, "rb") as f:
         key = serialization.load_pem_private_key(

@@ -1,11 +1,11 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import unittest
 import os
+import unittest
 
-from clairmeta.utils.xml import parse_xml
 from clairmeta.utils.sys import remove_key_dict
+from clairmeta.utils.xml import parse_xml
 
 
 class ParseTest(unittest.TestCase):

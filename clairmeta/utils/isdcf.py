@@ -29,7 +29,8 @@ RULES = {
         'FilmTitle': r'(^[a-zA-Z0-9-]{1,14}$)',
         'ContentType':
             r'(^'
-            r'(?P<Type>FTR|EPS|TLR|TSR|PRO|TST|RTG-F|RTG-T|SHR|ADV|XSN|PSA|POL)'
+            r'(?P<Type>FTR|EPS|TLR|TSR|PRO|TST|RTG-F|RTG-T|RTG|SHR|ADV|XSN|PSA|POL'
+            r'|CLP|STR|HLT|EVT)'
             r'(-(?P<Version>\d))?'
             r'(-(?P<Temporary>Temp))?'
             r'(-(?P<PreRelease>Pre))?'
@@ -64,13 +65,13 @@ RULES = {
             r'(-(?P<HearingImpaired>HI))?'
             r'(-(?P<VisionImpaired>VI))?'
             r'(-(?P<SignLanguage>SL))?'
-            r'(-(?P<ImmersiveSound>(ATMOS|Atmos|AURO|DTS-X)))?'
+            r'(-(?P<ImmersiveSound>(ATMOS|Atmos|AURO|DTS-X|IAB)))?'
             r'(-(?P<MotionSimulator>(DBOX|Dbox)))?'
             r'$)',
         'Resolution': r'(^2K|4K$)',
         'Studio': r'(^[A-Z0-9]{2,4}$)',
         'Date': r'(^\d{8}$)',
-        'Facility': r'(^[A-Z0-9]{2,3}$)',
+        'Facility': r'(^[A-Z0-9]{2,4}$)',
         'Standard':
             r'(^'
             r'(?P<Schema>(IOP|SMPTE))'
@@ -140,9 +141,7 @@ def parse_isdcf_string(isdcf_str):
     if len(fields_list) != 12:
         error_list.append(
             "ContentTitle should have 12 parts to be fully compliant with"
-            " ISDCF naming convention version {}, {} part(s) found".format(
-                dcnc_version, len(fields_list)
-            )
+            f" ISDCF naming convention version {dcnc_version}, {len(fields_list)} part(s) found"
         )
 
     # Parsing title with some robustness to missing / additionals fields
@@ -161,7 +160,7 @@ def parse_isdcf_string(isdcf_str):
             if idx_field == 0 and not match:
                 error_list.append(
                     "ContentTitle Film Name does not respect naming convention"
-                    " rules : {}".format(field)
+                    f" rules : {field}"
                 )
             elif match and idx_rule < max_field_shift:
                 fields_dict[name].update(match.groupdict(DEFAULT))
@@ -177,14 +176,12 @@ def parse_isdcf_string(isdcf_str):
 
         if not matched:
             error_list.append(
-                "ContentTitle Part {} not matching any naming convention field".format(
-                    field
-                )
+                f"ContentTitle Part {field} not matching any naming convention field"
             )
 
-    for name, _ in RULES[dcnc_version].items():
+    for name in RULES[dcnc_version]:
         if name not in fields_matched:
-            error_list.append("Field {} not found in ContentTitle".format(name))
+            error_list.append(f"Field {name} not found in ContentTitle")
 
     fields_dict = post_parse_isdcf(fields_dict)
     return fields_dict, error_list
@@ -203,7 +200,7 @@ def init_dict_isdcf(rules):
 
         res[name] = {}
         res[name]["Value"] = ""
-        res[name].update({k: DEFAULT for k in pattern.groupindex.keys()})
+        res[name].update({k: DEFAULT for k in pattern.groupindex})
 
     return res
 

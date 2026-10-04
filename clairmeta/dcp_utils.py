@@ -1,14 +1,13 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import os
 import base64
 import binascii
+import os
 import uuid
 
-from clairmeta.utils.sys import key_by_path_dict
 from clairmeta.utils.probe import probe_mxf, stat_mxf_audio
-
+from clairmeta.utils.sys import key_by_path_dict
 
 #
 # Generators to iterate on assets
@@ -54,8 +53,8 @@ def list_pkl_assets(packinglist):
 
 def list_cpl_assets(
     cpl,
-    filters=["Picture", "Sound", "AuxData", "Subtitle", "OpenCaption", "ClosedCaption"],
-    required_keys=[],
+    filters=("Picture", "Sound", "AuxData", "Subtitle", "OpenCaption", "ClosedCaption"),
+    required_keys=(),
 ):
     """Iterator on CompositionPlayList assets.
 
@@ -77,8 +76,7 @@ def list_cpl_assets(
                 k: v for k, v in assets.items() for req_k in required_keys if req_k in v
             }
 
-        for k, v in assets.items():
-            yield k, v
+        yield from assets.items()
 
 
 #
@@ -238,8 +236,8 @@ def cpl_extract_characteristics(cpl):
                 if node_value is not None:
                     iset[ikey].append(node_value)
         # Presence set building
-        for pkey in presence_keys:
-            presence_keys[pkey].append(pkey in reel["Assets"])
+        for pkey, presence in presence_keys.items():
+            presence.append(pkey in reel["Assets"])
 
     unified_integrity_keys = {}
     for k, v in integrity_keys.items():
@@ -292,7 +290,7 @@ def cpl_probe_asset(asset, essence, path):
                 asset["EntryPoint"],
                 asset["Duration"],
             )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - any probe failure is recorded on the asset
         asset["ProbeError"] = str(e)
 
 
@@ -321,6 +319,6 @@ def kdm_extract_key_info(data):
     fields["KeyId"] = str(uuid.UUID(bytes=data[56:72]))
     fields["NotValidBefore"] = data[72:97].decode("ascii")
     fields["NotValidAfter"] = data[97:122].decode("ascii")
-    fields["ContentKey"] = binascii.hexlify((data[122:138])).decode()
+    fields["ContentKey"] = binascii.hexlify(data[122:138]).decode()
 
     return fields

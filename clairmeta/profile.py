@@ -1,12 +1,11 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
+import copy
 import json
 import os
-import copy
 
 from clairmeta.exception import ClairMetaException
-
 
 DCP_CHECK_PROFILE = {
     # Checker criticality
@@ -38,6 +37,7 @@ DCP_CHECK_PROFILE = {
         "check_subtitle_cpl_uuid_case": "WARNING",
         "check_subtitle_cpl_duplicated_uuid": "WARNING",
         "check_subtitle_cpl_first_tt_event": "WARNING",
+        "check_subtitle_cpl_position": "WARNING",
         "check_picture_cpl_archival_framerate": "WARNING",
         "check_picture_cpl_hfr_framerate": "WARNING",
         "check_sound_cpl_format": "WARNING",
@@ -79,13 +79,13 @@ def load_profile(file_path):
 
     """
     if not os.path.isfile(file_path):
-        raise ClairMetaException("Load Profile : {} file not found".format(file_path))
+        raise ClairMetaException(f"Load Profile : {file_path} file not found")
 
     allowed_ext = [".json"]
     file_ext = os.path.splitext(file_path)[-1]
     if file_ext not in allowed_ext:
         raise ClairMetaException(
-            "Load Profile : {} must be a valid json file".format(file_path)
+            f"Load Profile : {file_path} must be a valid json file"
         )
 
     profile_format = {"criticality": dict, "bypass": list}
@@ -93,19 +93,17 @@ def load_profile(file_path):
     try:
         with open(file_path) as f:
             profile = json.load(f)
-    except Exception as e:
+    except (OSError, ValueError) as e:
         raise ClairMetaException(
-            "Load Profile {} : loading error - {}".format(file_path, str(e))
-        )
+            f"Load Profile {file_path} : loading error - {e!s}"
+        ) from e
 
     for k, v in profile_format.items():
         if k not in profile:
-            raise ClairMetaException(
-                "Load Profile {} : missing key {}".format(file_path, k)
-            )
+            raise ClairMetaException(f"Load Profile {file_path} : missing key {k}")
         if not isinstance(profile[k], v):
             raise ClairMetaException(
-                "Load Profile {} : key {} should be a {}".format(file_path, k, v)
+                f"Load Profile {file_path} : key {k} should be a {v}"
             )
 
     return profile

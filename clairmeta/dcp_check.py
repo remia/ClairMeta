@@ -1,20 +1,20 @@
 # Clairmeta - (C) YMAGIS S.A.
 # See LICENSE for more information
 
-import re
-import time
 import importlib
 import inspect
+import re
+import time
 import traceback
 
-from clairmeta.settings import DCP_CHECK_SETTINGS
-from clairmeta.logger import get_log
 from clairmeta.dcp_check_execution import CheckError, CheckExecution
-from clairmeta.utils.file import ConsoleProgress
 from clairmeta.exception import CheckException
+from clairmeta.logger import get_log
+from clairmeta.settings import DCP_CHECK_SETTINGS
+from clairmeta.utils.file import ConsoleProgress
 
 
-class CheckerBase(object):
+class CheckerBase:
     """Digital Cinema Package checker.
 
     Base class for check module, provide check discover and run utilities.
@@ -78,8 +78,9 @@ class CheckerBase(object):
                 checker.bypass_list = self.bypass_list
                 checker.hash_callback = self.hash_callback
                 self.check_modules[v] = checker
-            except (ImportError, Exception) as e:
-                self.log.critical("Import error {} : {}".format(module_path, str(e)))
+            # A broken module must not abort the check
+            except Exception as e:  # noqa: BLE001
+                self.log.critical(f"Import error {module_path} : {e!s}")
 
     def check(self):
         """Execute the complete check process.
@@ -107,7 +108,7 @@ class CheckerBase(object):
         member_list = inspect.getmembers(self, predicate=inspect.ismethod)
         for k, v in member_list:
             check_prefix = k.startswith("check_" + prefix)
-            check_bypass = any([k.startswith(c) for c in self.bypass_list])
+            check_bypass = any(k.startswith(c) for c in self.bypass_list)
 
             if check_prefix and not check_bypass:
                 checks.append(v)
@@ -120,9 +121,9 @@ class CheckerBase(object):
 
     def run_checks(self):
         """Execute all checks."""
-        self.log.info("Checking DCP : {}".format(self.dcp.path))
+        self.log.info(f"Checking DCP : {self.dcp.path}")
 
-        for _, checker in self.check_modules.items():
+        for checker in self.check_modules.values():
             self.checks += checker.run_checks()
         return self.checks
 
@@ -149,8 +150,9 @@ class CheckerBase(object):
             check_res = check(*args)
         except CheckException:
             pass
-        except Exception:
-            error = CheckError("{}".format(traceback.format_exc()))
+        # Any check failure is reported as internal_error
+        except Exception:  # noqa: BLE001
+            error = CheckError(f"{traceback.format_exc()}")
             error.name = "internal_error"
             error.parent_name = check_exec.name
             error.doc = "ClairMeta internal error"
@@ -167,7 +169,7 @@ class CheckerBase(object):
 
             self.checks.append(check_exec)
 
-            return check_res
+        return check_res
 
     def _check_setup(self):
         """Internal setup executed before each check is run."""
@@ -185,7 +187,7 @@ class CheckerBase(object):
 
         """
         if name and not re.match(self.ERROR_NAME_RE, name):
-            raise Exception("Error name invalid : {}".format(name))
+            raise ValueError(f"Error name invalid : {name}")
 
         self.errors.append(CheckError(message, name.lower(), doc))
 
