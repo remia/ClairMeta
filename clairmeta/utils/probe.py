@@ -209,6 +209,9 @@ def unwrap_mxf(path, prefix=None, args=()):
     if not check_command(ASDCP_UNWRAP_CMD):
         raise CommandException(f"{ASDCP_UNWRAP_CMD} not available")
 
+    # We are using chdir() below, so we make sure to use an absolute path
+    path = os.path.abspath(path)
+
     with temporary_dir() as tmp:
         if prefix:
             unwrap_prefix = os.path.join(tmp, prefix)
@@ -220,17 +223,7 @@ def unwrap_mxf(path, prefix=None, args=()):
 
         # asdcp-unwrap writes the essence to the given prefix, but emits
         # ANCILLARY RESOURCES (e.g. the font of a timed text asset) into the
-        # process working directory under their bare UUID. Left alone, those
-        # land wherever the host application happens to be running: the caller
-        # then cannot find them here (a guaranteed false "missing font file"
-        # on any conformant SMPTE DCP with an embedded font) and the host
-        # directory accumulates a stray file on every run.
-        #
-        # The working directory is moved around the call rather than passed as
-        # an argument: execute_command is a documented seam that host
-        # applications wrap for logging, and adding a keyword argument breaks
-        # any wrapper carrying the original signature. unwrap_prefix is an
-        # absolute path, so the essence output is unaffected.
+        # process working directory under their bare UUID.
         cwd = os.getcwd()
         try:
             os.chdir(tmp)
